@@ -1,0 +1,134 @@
+<!-- Modal Tambah Peminjaman -->
+<div th:if="${addBorrowingModalOpen}" class="modal fade show" id="addBorrowingModal" tabindex="-1" style="display: block;" aria-modal="true" role="dialog">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="bi bi-book me-2"></i>
+                    Tambah Peminjaman Baru
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" onclick="window.location.href='/borrowings'"></button>
+            </div>
+            <form th:action="@{/borrowings/add}" method="post" th:object="${borrowingForm}">
+                <div class="modal-body">
+                    <!-- Alert Error -->
+                    <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+                        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                        <span th:text="${error}"></span>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-12 mb-3">
+                            <label for="bookId" class="form-label">Pilih Buku <span class="text-danger">*</span></label>
+                            <select class="form-select" id="bookId" th:field="*{bookId}" required onchange="updateBookInfo()">
+                                <option value="">-- Pilih Buku --</option>
+                                <option th:each="book : ${availableBooks}" 
+                                        th:value="${book.id}" 
+                                        th:text="${book.title + ' - ' + book.author + ' (Stok: ' + book.availableStock + ')'}"
+                                        th:data-title="${book.title}"
+                                        th:data-author="${book.author}"
+                                        th:data-isbn="${book.isbn}">
+                                </option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Book Info Display -->
+                    <div id="bookInfoDisplay" class="alert alert-info" style="display: none;">
+                        <h6 class="mb-2">Informasi Buku:</h6>
+                        <p class="mb-1"><strong>Judul:</strong> <span id="displayTitle"></span></p>
+                        <p class="mb-1"><strong>Penulis:</strong> <span id="displayAuthor"></span></p>
+                        <p class="mb-0"><strong>ISBN:</strong> <span id="displayIsbn"></span></p>
+                    </div>
+
+                    <hr>
+
+                    <h6 class="mb-3">Informasi Peminjam</h6>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="borrowerName" class="form-label">Nama Peminjam <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="borrowerName" th:field="*{borrowerName}" 
+                                   placeholder="Masukkan nama peminjam" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="borrowerEmail" class="form-label">Email Peminjam</label>
+                            <input type="email" class="form-control" id="borrowerEmail" th:field="*{borrowerEmail}" 
+                                   placeholder="email@example.com">
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-12 mb-3">
+                            <label for="borrowerPhone" class="form-label">No. Telepon Peminjam</label>
+                            <input type="tel" class="form-control" id="borrowerPhone" th:field="*{borrowerPhone}" 
+                                   placeholder="08xxxxxxxxxx">
+                        </div>
+                    </div>
+
+                    <hr>
+
+                    <h6 class="mb-3">Informasi Peminjaman</h6>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="borrowDate" class="form-label">Tanggal Pinjam <span class="text-danger">*</span></label>
+                            <input type="date" class="form-control" id="borrowDate" th:field="*{borrowDate}" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="dueDate" class="form-label">Tanggal Jatuh Tempo <span class="text-danger">*</span></label>
+                            <input type="date" class="form-control" id="dueDate" th:field="*{dueDate}" required>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-12 mb-3">
+                            <label for="notes" class="form-label">Catatan</label>
+                            <textarea class="form-control" id="notes" th:field="*{notes}" rows="3" 
+                                      placeholder="Catatan tambahan (opsional)"></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" onclick="window.location.href='/borrowings'">Batal</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-save me-1"></i> Simpan Peminjaman
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Backdrop -->
+<div th:if="${addBorrowingModalOpen}" class="modal-backdrop fade show"></div>
+
+<script th:if="${addBorrowingModalOpen}">
+    document.addEventListener('DOMContentLoaded', function() {
+        var modal = new bootstrap.Modal(document.getElementById('addBorrowingModal'));
+        modal.show();
+        
+        // Set default dates
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('borrowDate').value = today;
+        
+        const dueDate = new Date();
+        dueDate.setDate(dueDate.getDate() + 14); // Default 14 hari
+        document.getElementById('dueDate').value = dueDate.toISOString().split('T')[0];
+    });
+
+    function updateBookInfo() {
+        const select = document.getElementById('bookId');
+        const selectedOption = select.options[select.selectedIndex];
+        
+        if (selectedOption.value) {
+            document.getElementById('displayTitle').textContent = selectedOption.getAttribute('data-title');
+            document.getElementById('displayAuthor').textContent = selectedOption.getAttribute('data-author');
+            document.getElementById('displayIsbn').textContent = selectedOption.getAttribute('data-isbn');
+            document.getElementById('bookInfoDisplay').style.display = 'block';
+        } else {
+            document.getElementById('bookInfoDisplay').style.display = 'none';
+        }
+    }
+</script>

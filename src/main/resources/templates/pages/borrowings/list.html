@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="id" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Daftar Peminjaman - Perpustakaan</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <style>
+        body { background-color: #f8f9fa; }
+        .table-action-btn { width: 32px; height: 32px; padding: 0; line-height: 32px; text-align: center; }
+        .status-badge { font-size: 0.85rem; padding: 0.5em 0.8em; }
+    </style>
+</head>
+<body>
+    <!-- Navbar (Sama seperti Home) -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary mb-4">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/">
+                <i class="bi bi-book-half me-2"></i>Perpustakaan Digital
+            </a>
+            <div class="collapse navbar-collapse">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link" href="/"><i class="bi bi-house-door me-1"></i> Dashboard</a></li>
+                    <li class="nav-item"><a class="nav-link active" href="/borrowings"><i class="bi bi-journal-bookmark me-1"></i> Peminjaman</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/auth/logout"><i class="bi bi-box-arrow-right"></i> Logout</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid px-4">
+        <div class="card shadow-sm">
+            <div class="card-header bg-white py-3">
+                <div class="row align-items-center">
+                    <div class="col">
+                        <h5 class="mb-0 text-primary">
+                            <i class="bi bi-journal-text me-2"></i>Data Peminjaman Buku
+                        </h5>
+                    </div>
+                    <div class="col text-end">
+                        <!-- Tombol ini memicu Modal Add yang kamu kirim -->
+                        <button class="btn btn-primary" onclick="window.location.href='/borrowings?addBorrowingModalOpen=true'">
+                            <i class="bi bi-plus-circle me-1"></i> Tambah Peminjaman
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                <!-- Search & Filter -->
+                <form method="get" action="/borrowings" class="mb-4">
+                    <div class="input-group">
+                        <input type="text" class="form-control" name="search" th:value="${search}" 
+                               placeholder="Cari nama peminjam, judul buku, atau email...">
+                        <button class="btn btn-outline-primary" type="submit">Cari</button>
+                        <a href="/borrowings" class="btn btn-outline-secondary">Reset</a>
+                    </div>
+                </form>
+
+                <!-- Table -->
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>No</th>
+                                <th>Peminjam</th>
+                                <th>Buku</th>
+                                <th>Tgl Pinjam</th>
+                                <th>Jatuh Tempo</th>
+                                <th>Status</th>
+                                <th class="text-center">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="borrowing, iterStat : ${borrowings}">
+                                <td th:text="${iterStat.count}">1</td>
+                                <td>
+                                    <div class="fw-bold" th:text="${borrowing.borrowerName}">Nama Peminjam</div>
+                                    <small class="text-muted" th:text="${borrowing.borrowerEmail}">email@mail.com</small>
+                                </td>
+                                <td>
+                                    <i class="bi bi-book me-1 text-secondary"></i>
+                                    <span th:text="${borrowing.bookTitle}">Judul Buku</span>
+                                </td>
+                                <td th:text="${borrowing.borrowDate}">2023-01-01</td>
+                                <td th:text="${borrowing.dueDate}">2023-01-14</td>
+                                <td>
+                                    <!-- Logika Badge Status -->
+                                    <span th:if="${borrowing.returnedDate != null}" class="badge bg-success status-badge">
+                                        <i class="bi bi-check-circle me-1"></i> Dikembalikan
+                                    </span>
+                                    <span th:if="${borrowing.returnedDate == null and borrowing.isOverdue}" class="badge bg-danger status-badge">
+                                        <i class="bi bi-exclamation-circle me-1"></i> Terlambat
+                                    </span>
+                                    <span th:if="${borrowing.returnedDate == null and !borrowing.isOverdue}" class="badge bg-warning text-dark status-badge">
+                                        <i class="bi bi-hourglass-split me-1"></i> Dipinjam
+                                    </span>
+                                </td>
+                                <td class="text-center">
+                                    <a th:href="@{'/borrowings/' + ${borrowing.id}}" class="btn btn-sm btn-outline-info table-action-btn" title="Detail">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                    
+                                    <!-- Tombol Edit & Delete memicu URL Parameter untuk membuka Modal -->
+                                    <button th:if="${borrowing.returnedDate == null}" 
+                                            class="btn btn-sm btn-outline-warning table-action-btn" 
+                                            th:onclick="'editBorrowing(\'' + ${borrowing.id} + '\')'" title="Edit">
+                                        <i class="bi bi-pencil"></i>
+                                    </button>
+                                    
+                                    <button class="btn btn-sm btn-outline-danger table-action-btn" 
+                                            th:onclick="'deleteBorrowing(\'' + ${borrowing.id} + '\')'" title="Hapus">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                            <tr th:if="${borrowings.empty}">
+                                <td colspan="7" class="text-center py-4 text-muted">
+                                    <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+                                    Belum ada data peminjaman.
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- INCLUDE MODALS -->
+    <!-- Ini akan menyisipkan kode modal add/edit/delete yang kamu berikan -->
+    <div th:replace="~{models/borrowings/add :: }"></div>
+    <div th:replace="~{models/borrowings/edit :: }"></div>
+    <div th:replace="~{models/borrowings/delete :: }"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Fungsi untuk memanipulasi URL agar Controller membuka modal yang sesuai
+        function editBorrowing(id) {
+            window.location.href = '/borrowings?editBorrowingModalOpen=true&editBorrowingModalId=' + id;
+        }
+
+        function deleteBorrowing(id) {
+            window.location.href = '/borrowings?deleteBorrowingModalOpen=true&deleteBorrowingModalId=' + id;
+        }
+    </script>
+</body>
+</html>

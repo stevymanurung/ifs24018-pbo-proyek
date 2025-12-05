@@ -1,0 +1,95 @@
+<!-- Modal Delete Peminjaman -->
+<div th:if="${deleteBorrowingModalOpen}" class="modal fade show" id="deleteBorrowingModal" tabindex="-1" style="display: block;" aria-modal="true" role="dialog">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                    Hapus Peminjaman
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close" onclick="window.location.href='/borrowings'"></button>
+            </div>
+            <form th:action="@{/borrowings/delete}" method="post" th:object="${borrowingForm}">
+                <input type="hidden" th:field="*{id}">
+                <div class="modal-body">
+                    <!-- Alert Error -->
+                    <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+                        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                        <span th:text="${error}"></span>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+
+                    <div class="alert alert-warning">
+                        <i class="bi bi-info-circle-fill me-2"></i>
+                        <strong>Peringatan!</strong> Tindakan ini tidak dapat dibatalkan. Jika buku masih dipinjam, stok akan dikembalikan otomatis.
+                    </div>
+
+                    <p class="mb-3">Anda yakin ingin menghapus data peminjaman ini?</p>
+                    
+                    <div id="borrowingInfo" class="card mb-3">
+                        <div class="card-body">
+                            <h6 class="card-title" id="borrowingBorrowerName">Loading...</h6>
+                            <p class="card-text text-muted mb-1" id="borrowingBookTitle"></p>
+                            <p class="card-text text-muted mb-0" id="borrowingDates"></p>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="confirmBorrowerName" class="form-label">
+                            Ketik nama peminjam untuk konfirmasi <span class="text-danger">*</span>
+                        </label>
+                        <input type="text" class="form-control" id="confirmBorrowerName" th:field="*{confirmBorrowerName}" 
+                               placeholder="Ketik nama peminjam" required autocomplete="off">
+                        <small class="form-text text-muted">Salin dan tempel nama peminjam di atas untuk konfirmasi</small>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" onclick="window.location.href='/borrowings'">Batal</button>
+                    <button type="submit" class="btn btn-danger">
+                        <i class="bi bi-trash me-1"></i> Hapus Peminjaman
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Backdrop -->
+<div th:if="${deleteBorrowingModalOpen}" class="modal-backdrop fade show"></div>
+
+<script th:if="${deleteBorrowingModalOpen}">
+    document.addEventListener('DOMContentLoaded', function() {
+        var modal = new bootstrap.Modal(document.getElementById('deleteBorrowingModal'));
+        modal.show();
+        
+        // Load data peminjaman
+        var borrowingId = /*[[${deleteBorrowingModalId}]]*/ '';
+        if (borrowingId) {
+            fetch('/api/borrowings/' + borrowingId, {
+                headers: {
+                    'Authorization': 'Bearer ' + localStorage.getItem('authToken')
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    const borrowing = data.data.borrowing;
+                    document.getElementById('borrowingBorrowerName').textContent = borrowing.borrowerName;
+                    
+                    // Get book title
+                    return fetch('/api/books/' + borrowing.bookId, {
+                        headers: {
+                            'Authorization': 'Bearer ' + localStorage.getItem('authToken')
+                        }
+                    });
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    document.getElementById('borrowingBookTitle').textContent = 'Buku: ' + data.data.book.title;
+                }
+            });
+        }
+    });
+</script>

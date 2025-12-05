@@ -1,0 +1,110 @@
+<!-- Modal Edit Peminjaman -->
+<div th:if="${editBorrowingModalOpen}" class="modal fade show" id="editBorrowingModal" tabindex="-1" style="display: block;" aria-modal="true" role="dialog">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="bi bi-pencil me-2"></i>
+                    Edit Peminjaman
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" onclick="window.location.href='/borrowings'"></button>
+            </div>
+            <form th:action="@{/borrowings/edit}" method="post" th:object="${borrowingForm}">
+                <input type="hidden" th:field="*{id}">
+                <div class="modal-body">
+                    <!-- Alert Error -->
+                    <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+                        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                        <span th:text="${error}"></span>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+
+                    <div class="alert alert-warning">
+                        <i class="bi bi-info-circle-fill me-2"></i>
+                        <strong>Catatan:</strong> Buku yang dipinjam tidak dapat diubah. Hanya data peminjam dan tanggal yang dapat dimodifikasi.
+                    </div>
+
+                    <h6 class="mb-3">Informasi Peminjam</h6>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="editBorrowerName" class="form-label">Nama Peminjam <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="editBorrowerName" th:field="*{borrowerName}" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="editBorrowerEmail" class="form-label">Email Peminjam</label>
+                            <input type="email" class="form-control" id="editBorrowerEmail" th:field="*{borrowerEmail}">
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-12 mb-3">
+                            <label for="editBorrowerPhone" class="form-label">No. Telepon Peminjam</label>
+                            <input type="tel" class="form-control" id="editBorrowerPhone" th:field="*{borrowerPhone}">
+                        </div>
+                    </div>
+
+                    <hr>
+
+                    <h6 class="mb-3">Informasi Peminjaman</h6>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="editBorrowDate" class="form-label">Tanggal Pinjam <span class="text-danger">*</span></label>
+                            <input type="date" class="form-control" id="editBorrowDate" th:field="*{borrowDate}" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="editDueDate" class="form-label">Tanggal Jatuh Tempo <span class="text-danger">*</span></label>
+                            <input type="date" class="form-control" id="editDueDate" th:field="*{dueDate}" required>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-12 mb-3">
+                            <label for="editNotes" class="form-label">Catatan</label>
+                            <textarea class="form-control" id="editNotes" th:field="*{notes}" rows="3"></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" onclick="window.location.href='/borrowings'">Batal</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-save me-1"></i> Update Peminjaman
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Backdrop -->
+<div th:if="${editBorrowingModalOpen}" class="modal-backdrop fade show"></div>
+
+<script th:if="${editBorrowingModalOpen}">
+    document.addEventListener('DOMContentLoaded', function() {
+        var modal = new bootstrap.Modal(document.getElementById('editBorrowingModal'));
+        modal.show();
+        
+        // Load data peminjaman
+        var borrowingId = /*[[${editBorrowingModalId}]]*/ '';
+        if (borrowingId) {
+            fetch('/api/borrowings/' + borrowingId, {
+                headers: {
+                    'Authorization': 'Bearer ' + localStorage.getItem('authToken')
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    const borrowing = data.data.borrowing;
+                    document.getElementById('editBorrowerName').value = borrowing.borrowerName;
+                    document.getElementById('editBorrowerEmail').value = borrowing.borrowerEmail || '';
+                    document.getElementById('editBorrowerPhone').value = borrowing.borrowerPhone || '';
+                    document.getElementById('editBorrowDate').value = borrowing.borrowDate;
+                    document.getElementById('editDueDate').value = borrowing.dueDate;
+                    document.getElementById('editNotes').value = borrowing.notes || '';
+                }
+            });
+        }
+    });
+</script>

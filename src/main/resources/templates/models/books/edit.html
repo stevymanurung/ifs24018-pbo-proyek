@@ -1,0 +1,111 @@
+<!-- Modal Edit Buku -->
+<div th:if="${editBookModalOpen}" class="modal fade show" id="editBookModal" tabindex="-1" style="display: block;" aria-modal="true" role="dialog">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Edit Buku</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" onclick="window.location.href='/'"></button>
+            </div>
+            <form th:action="@{/books/edit}" method="post" th:object="${bookForm}">
+                <input type="hidden" th:field="*{id}">
+                <div class="modal-body">
+                    <!-- Alert Error -->
+                    <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+                        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                        <span th:text="${error}"></span>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="editTitle" class="form-label">Judul Buku <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="editTitle" th:field="*{title}" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="editAuthor" class="form-label">Penulis <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="editAuthor" th:field="*{author}" required>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="editIsbn" class="form-label">ISBN <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="editIsbn" th:field="*{isbn}" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="editCategory" class="form-label">Kategori <span class="text-danger">*</span></label>
+                            <select class="form-select" id="editCategory" th:field="*{category}" required>
+                                <option value="">Pilih Kategori</option>
+                                <option value="Fiksi">Fiksi</option>
+                                <option value="Non-Fiksi">Non-Fiksi</option>
+                                <option value="Sains">Sains</option>
+                                <option value="Teknologi">Teknologi</option>
+                                <option value="Sejarah">Sejarah</option>
+                                <option value="Biografi">Biografi</option>
+                                <option value="Referensi">Referensi</option>
+                                <option value="Lainnya">Lainnya</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="editPublisher" class="form-label">Penerbit</label>
+                            <input type="text" class="form-control" id="editPublisher" th:field="*{publisher}">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="editPublicationYear" class="form-label">Tahun Terbit</label>
+                            <input type="number" class="form-control" id="editPublicationYear" th:field="*{publicationYear}" min="1900" max="2100">
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-12 mb-3">
+                            <label for="editStock" class="form-label">Stok <span class="text-danger">*</span></label>
+                            <input type="number" class="form-control" id="editStock" th:field="*{stock}" min="1" required>
+                            <small class="form-text text-muted">Jumlah total buku yang tersedia</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" onclick="window.location.href='/'">Batal</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-save me-1"></i> Update Buku
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Backdrop -->
+<div th:if="${editBookModalOpen}" class="modal-backdrop fade show"></div>
+
+<script th:if="${editBookModalOpen}">
+    document.addEventListener('DOMContentLoaded', function() {
+        var modal = new bootstrap.Modal(document.getElementById('editBookModal'));
+        modal.show();
+        
+        // Load data buku untuk edit
+        var bookId = /*[[${editBookModalId}]]*/ '';
+        if (bookId) {
+            fetch('/api/books/' + bookId, {
+                headers: {
+                    'Authorization': 'Bearer ' + localStorage.getItem('authToken')
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    document.getElementById('editTitle').value = data.data.book.title;
+                    document.getElementById('editAuthor').value = data.data.book.author;
+                    document.getElementById('editIsbn').value = data.data.book.isbn;
+                    document.getElementById('editCategory').value = data.data.book.category;
+                    document.getElementById('editPublisher').value = data.data.book.publisher || '';
+                    document.getElementById('editPublicationYear').value = data.data.book.publicationYear || '';
+                    document.getElementById('editStock').value = data.data.book.stock;
+                }
+            });
+        }
+    });
+</script>

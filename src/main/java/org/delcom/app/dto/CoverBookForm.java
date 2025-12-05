@@ -4,7 +4,7 @@ import java.util.UUID;
 import org.springframework.web.multipart.MultipartFile;
 import jakarta.validation.constraints.NotNull;
 
-public class CoverTodoForm {
+public class CoverBookForm {
 
     private UUID id;
 
@@ -12,7 +12,7 @@ public class CoverTodoForm {
     private MultipartFile coverFile;
 
     // Constructor
-    public CoverTodoForm() {
+    public CoverBookForm() {
     }
 
     // Getters and Setters

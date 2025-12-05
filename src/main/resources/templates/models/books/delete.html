@@ -1,0 +1,81 @@
+<!-- Modal Delete Buku -->
+<div th:if="${deleteBookModalOpen}" class="modal fade show" id="deleteBookModal" tabindex="-1" style="display: block;" aria-modal="true" role="dialog">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                    Hapus Buku
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close" onclick="window.location.href='/'"></button>
+            </div>
+            <form th:action="@{/books/delete}" method="post" th:object="${bookForm}">
+                <input type="hidden" th:field="*{id}">
+                <div class="modal-body">
+                    <!-- Alert Error -->
+                    <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+                        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                        <span th:text="${error}"></span>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+
+                    <div class="alert alert-warning">
+                        <i class="bi bi-info-circle-fill me-2"></i>
+                        <strong>Peringatan!</strong> Tindakan ini tidak dapat dibatalkan.
+                    </div>
+
+                    <p class="mb-3">Anda yakin ingin menghapus buku ini?</p>
+                    
+                    <div id="bookInfo" class="card mb-3">
+                        <div class="card-body">
+                            <h6 class="card-title" id="bookTitle">Loading...</h6>
+                            <p class="card-text text-muted mb-0" id="bookAuthor"></p>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="confirmTitle" class="form-label">
+                            Ketik judul buku untuk konfirmasi <span class="text-danger">*</span>
+                        </label>
+                        <input type="text" class="form-control" id="confirmTitle" th:field="*{confirmTitle}" 
+                               placeholder="Ketik judul buku" required autocomplete="off">
+                        <small class="form-text text-muted">Salin dan tempel judul buku di atas untuk konfirmasi</small>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" onclick="window.location.href='/'">Batal</button>
+                    <button type="submit" class="btn btn-danger">
+                        <i class="bi bi-trash me-1"></i> Hapus Buku
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Backdrop -->
+<div th:if="${deleteBookModalOpen}" class="modal-backdrop fade show"></div>
+
+<script th:if="${deleteBookModalOpen}">
+    document.addEventListener('DOMContentLoaded', function() {
+        var modal = new bootstrap.Modal(document.getElementById('deleteBookModal'));
+        modal.show();
+        
+        // Load data buku
+        var bookId = /*[[${deleteBookModalId}]]*/ '';
+        if (bookId) {
+            fetch('/api/books/' + bookId, {
+                headers: {
+                    'Authorization': 'Bearer ' + localStorage.getItem('authToken')
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    document.getElementById('bookTitle').textContent = data.data.book.title;
+                    document.getElementById('bookAuthor').textContent = 'Penulis: ' + data.data.book.author;
+                }
+            });
+        }
+    });
+</script>

@@ -1,0 +1,76 @@
+<!-- Modal Edit Cover Buku -->
+<div th:if="${editCoverBookModalOpen}" class="modal fade show" id="editCoverBookModal" tabindex="-1" style="display: block;" aria-modal="true" role="dialog">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="bi bi-image me-2"></i>
+                    Upload Cover Buku
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" th:onclick="'window.location.href=\'/books/' + ${book.id} + '\''"></button>
+            </div>
+            <form th:action="@{/books/edit-cover}" method="post" enctype="multipart/form-data" th:object="${coverBookForm}">
+                <input type="hidden" th:field="*{id}">
+                <div class="modal-body">
+                    <!-- Alert Error -->
+                    <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+                        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                        <span th:text="${error}"></span>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+
+                    <!-- Current Cover Preview -->
+                    <div class="text-center mb-3" th:if="${book.cover != null}">
+                        <p class="text-muted mb-2">Cover saat ini:</p>
+                        <img th:src="@{'/books/cover/' + ${book.cover}}" alt="Current Cover" class="img-thumbnail" style="max-height: 200px;">
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="coverFile" class="form-label">
+                            Pilih Cover Baru <span class="text-danger">*</span>
+                        </label>
+                        <input type="file" class="form-control" id="coverFile" th:field="*{coverFile}" 
+                               accept="image/jpeg,image/png,image/gif,image/webp" required onchange="previewImage(event)">
+                        <small class="form-text text-muted">
+                            Format: JPG, PNG, GIF, WEBP. Maksimal 5MB
+                        </small>
+                    </div>
+
+                    <!-- Image Preview -->
+                    <div class="text-center mb-3" id="imagePreviewContainer" style="display: none;">
+                        <p class="text-muted mb-2">Preview:</p>
+                        <img id="imagePreview" src="" alt="Preview" class="img-thumbnail" style="max-height: 200px;">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" th:onclick="'window.location.href=\'/books/' + ${book.id} + '\''">Batal</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-upload me-1"></i> Upload Cover
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Backdrop -->
+<div th:if="${editCoverBookModalOpen}" class="modal-backdrop fade show"></div>
+
+<script th:if="${editCoverBookModalOpen}">
+    document.addEventListener('DOMContentLoaded', function() {
+        var modal = new bootstrap.Modal(document.getElementById('editCoverBookModal'));
+        modal.show();
+    });
+
+    function previewImage(event) {
+        const file = event.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                document.getElementById('imagePreview').src = e.target.result;
+                document.getElementById('imagePreviewContainer').style.display = 'block';
+            }
+            reader.readAsDataURL(file);
+        }
+    }
+</script>

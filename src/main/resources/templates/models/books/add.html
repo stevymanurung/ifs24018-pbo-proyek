@@ -1,0 +1,88 @@
+<!-- Modal Tambah Buku -->
+<div th:if="${addBookModalOpen}" class="modal fade show" id="addBookModal" tabindex="-1" style="display: block;" aria-modal="true" role="dialog">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Tambah Buku Baru</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" onclick="window.location.href='/'"></button>
+            </div>
+            <form th:action="@{/books/add}" method="post" th:object="${bookForm}">
+                <div class="modal-body">
+                    <!-- Alert Error -->
+                    <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+                        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                        <span th:text="${error}"></span>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="title" class="form-label">Judul Buku <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="title" th:field="*{title}" placeholder="Masukkan judul buku" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="author" class="form-label">Penulis <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="author" th:field="*{author}" placeholder="Masukkan nama penulis" required>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="isbn" class="form-label">ISBN <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="isbn" th:field="*{isbn}" placeholder="Contoh: 978-3-16-148410-0" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="category" class="form-label">Kategori <span class="text-danger">*</span></label>
+                            <select class="form-select" id="category" th:field="*{category}" required>
+                                <option value="">Pilih Kategori</option>
+                                <option value="Fiksi">Fiksi</option>
+                                <option value="Non-Fiksi">Non-Fiksi</option>
+                                <option value="Sains">Sains</option>
+                                <option value="Teknologi">Teknologi</option>
+                                <option value="Sejarah">Sejarah</option>
+                                <option value="Biografi">Biografi</option>
+                                <option value="Referensi">Referensi</option>
+                                <option value="Lainnya">Lainnya</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="publisher" class="form-label">Penerbit</label>
+                            <input type="text" class="form-control" id="publisher" th:field="*{publisher}" placeholder="Masukkan nama penerbit">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="publicationYear" class="form-label">Tahun Terbit</label>
+                            <input type="number" class="form-control" id="publicationYear" th:field="*{publicationYear}" placeholder="Contoh: 2024" min="1900" max="2100">
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-12 mb-3">
+                            <label for="stock" class="form-label">Stok <span class="text-danger">*</span></label>
+                            <input type="number" class="form-control" id="stock" th:field="*{stock}" placeholder="Jumlah stok buku" min="1" required>
+                            <small class="form-text text-muted">Jumlah total buku yang tersedia</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" onclick="window.location.href='/'">Batal</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-save me-1"></i> Simpan Buku
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Backdrop -->
+<div th:if="${addBookModalOpen}" class="modal-backdrop fade show"></div>
+
+<script th:if="${addBookModalOpen}">
+    document.addEventListener('DOMContentLoaded', function() {
+        var modal = new bootstrap.Modal(document.getElementById('addBookModal'));
+        modal.show();
+    });
+</script>

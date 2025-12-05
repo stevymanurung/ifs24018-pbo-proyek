@@ -1,7 +1,7 @@
 spring.application.name=Aplikasi UI SpringBoot
 
 # Datasource
-spring.datasource.url=jdbc:postgresql://localhost:5432/db_pbo_app
+spring.datasource.url=jdbc:postgresql://localhost:5432/dbo-proyek-stevy
 spring.datasource.username=postgres
 spring.datasource.password=postgres
 spring.datasource.driver-class-name=org.postgresql.Driver
