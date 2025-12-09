@@ -1,76 +1,121 @@
-<!-- Modal Edit Cover Buku -->
-<div th:if="${editCoverBookModalOpen}" class="modal fade show" id="editCoverBookModal" tabindex="-1" style="display: block;" aria-modal="true" role="dialog">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">
-                    <i class="bi bi-image me-2"></i>
-                    Upload Cover Buku
-                </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" th:onclick="'window.location.href=\'/books/' + ${book.id} + '\''"></button>
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+    <div th:fragment="editCoverModal" class="modal fade" id="editCoverModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-gradient-primary text-white">
+                    <h5 class="modal-title">
+                        <i class="bi bi-image me-2"></i>
+                        Upload Book Cover
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                
+                <form th:action="@{/books/edit-cover}" method="post" 
+                      th:object="${coverBookForm}" 
+                      enctype="multipart/form-data" 
+                      data-loading="true">
+                    
+                    <input type="hidden" th:field="*{id}">
+                    
+                    <div class="modal-body">
+                        <!-- File Input -->
+                        <div class="mb-3">
+                            <label for="coverFile" class="form-label fw-semibold">
+                                <i class="bi bi-file-image me-1"></i>
+                                Select Image File <span class="text-danger">*</span>
+                            </label>
+                            <input type="file" class="form-control" id="coverFile" 
+                                   name="coverFile" 
+                                   accept="image/jpeg,image/png,image/gif,image/webp"
+                                   required
+                                   onchange="previewImage(this)">
+                            <small class="form-text text-muted">
+                                Supported formats: JPG, PNG, GIF, WEBP (Max 5MB)
+                            </small>
+                        </div>
+
+                        <!-- Image Preview -->
+                        <div id="imagePreviewContainer" class="text-center d-none">
+                            <label class="form-label fw-semibold">Preview:</label>
+                            <div class="border rounded p-2">
+                                <img id="imagePreview" src="" alt="Preview" 
+                                     style="max-width: 100%; max-height: 300px; border-radius: 4px;">
+                            </div>
+                        </div>
+
+                        <div class="alert alert-info mt-3 mb-0">
+                            <i class="bi bi-info-circle me-2"></i>
+                            <small>
+                                <strong>Tips:</strong> Use high-quality images with a 2:3 aspect ratio 
+                                (e.g., 400x600px) for best results.
+                            </small>
+                        </div>
+                    </div>
+                    
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                            <i class="bi bi-x-lg me-2"></i>
+                            Cancel
+                        </button>
+                        <button type="submit" class="btn btn-primary" id="uploadBtn" disabled>
+                            <span class="loading-spinner spinner-border spinner-border-sm me-2" role="status"></span>
+                            <i class="bi bi-upload me-2"></i>
+                            Upload Cover
+                        </button>
+                    </div>
+                </form>
             </div>
-            <form th:action="@{/books/edit-cover}" method="post" enctype="multipart/form-data" th:object="${coverBookForm}">
-                <input type="hidden" th:field="*{id}">
-                <div class="modal-body">
-                    <!-- Alert Error -->
-                    <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
-                        <i class="bi bi-exclamation-triangle-fill me-2"></i>
-                        <span th:text="${error}"></span>
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                    </div>
-
-                    <!-- Current Cover Preview -->
-                    <div class="text-center mb-3" th:if="${book.cover != null}">
-                        <p class="text-muted mb-2">Cover saat ini:</p>
-                        <img th:src="@{'/books/cover/' + ${book.cover}}" alt="Current Cover" class="img-thumbnail" style="max-height: 200px;">
-                    </div>
-
-                    <div class="mb-3">
-                        <label for="coverFile" class="form-label">
-                            Pilih Cover Baru <span class="text-danger">*</span>
-                        </label>
-                        <input type="file" class="form-control" id="coverFile" th:field="*{coverFile}" 
-                               accept="image/jpeg,image/png,image/gif,image/webp" required onchange="previewImage(event)">
-                        <small class="form-text text-muted">
-                            Format: JPG, PNG, GIF, WEBP. Maksimal 5MB
-                        </small>
-                    </div>
-
-                    <!-- Image Preview -->
-                    <div class="text-center mb-3" id="imagePreviewContainer" style="display: none;">
-                        <p class="text-muted mb-2">Preview:</p>
-                        <img id="imagePreview" src="" alt="Preview" class="img-thumbnail" style="max-height: 200px;">
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" th:onclick="'window.location.href=\'/books/' + ${book.id} + '\''">Batal</button>
-                    <button type="submit" class="btn btn-primary">
-                        <i class="bi bi-upload me-1"></i> Upload Cover
-                    </button>
-                </div>
-            </form>
         </div>
     </div>
-</div>
 
-<!-- Backdrop -->
-<div th:if="${editCoverBookModalOpen}" class="modal-backdrop fade show"></div>
+    <script>
+        function previewImage(input) {
+            const preview = document.getElementById('imagePreview');
+            const previewContainer = document.getElementById('imagePreviewContainer');
+            const uploadBtn = document.getElementById('uploadBtn');
 
-<script th:if="${editCoverBookModalOpen}">
-    document.addEventListener('DOMContentLoaded', function() {
-        var modal = new bootstrap.Modal(document.getElementById('editCoverBookModal'));
-        modal.show();
-    });
+            if (input.files && input.files[0]) {
+                // Validate file size (5MB = 5 * 1024 * 1024 bytes)
+                if (input.files[0].size > 5 * 1024 * 1024) {
+                    alert('File size exceeds 5MB. Please choose a smaller file.');
+                    input.value = '';
+                    previewContainer.classList.add('d-none');
+                    uploadBtn.disabled = true;
+                    return;
+                }
 
-    function previewImage(event) {
-        const file = event.target.files[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                document.getElementById('imagePreview').src = e.target.result;
-                document.getElementById('imagePreviewContainer').style.display = 'block';
+                // Validate file type
+                const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+                if (!validTypes.includes(input.files[0].type)) {
+                    alert('Invalid file type. Please use JPG, PNG, GIF, or WEBP.');
+                    input.value = '';
+                    previewContainer.classList.add('d-none');
+                    uploadBtn.disabled = true;
+                    return;
+                }
+
+                // Show preview
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    preview.src = e.target.result;
+                    previewContainer.classList.remove('d-none');
+                    uploadBtn.disabled = false;
+                };
+                reader.readAsDataURL(input.files[0]);
+            } else {
+                previewContainer.classList.add('d-none');
+                uploadBtn.disabled = true;
             }
-            reader.readAsDataURL(file);
         }
-    }
-</script>
+
+        // Reset modal when closed
+        document.getElementById('editCoverModal').addEventListener('hidden.bs.modal', function () {
+            document.getElementById('coverFile').value = '';
+            document.getElementById('imagePreviewContainer').classList.add('d-none');
+            document.getElementById('uploadBtn').disabled = true;
+        });
+    </script>
+</body>
+</html>

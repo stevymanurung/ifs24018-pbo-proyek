@@ -28,10 +28,10 @@ public class Book {
     @Column(name = "category", nullable = false)
     private String category;
 
-    @Column(name = "publisher", nullable = true)
+    @Column(name = "publisher")
     private String publisher;
 
-    @Column(name = "publication_year", nullable = true)
+    @Column(name = "publication_year")
     private Integer publicationYear;
 
     @Column(name = "stock", nullable = false)
@@ -40,7 +40,7 @@ public class Book {
     @Column(name = "available_stock", nullable = false)
     private Integer availableStock;
 
-    @Column(name = "cover", nullable = true)
+    @Column(name = "cover")
     private String cover;
 
     @Column(name = "created_at", nullable = false, updatable = false)
@@ -63,7 +63,7 @@ public class Book {
         this.publisher = publisher;
         this.publicationYear = publicationYear;
         this.stock = stock;
-        this.availableStock = stock; // Initially all stock is available
+        this.availableStock = stock; // Initialize available stock = stock
     }
 
     // Getters and Setters
@@ -159,11 +159,18 @@ public class Book {
         return createdAt;
     }
 
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
+
     public LocalDateTime getUpdatedAt() {
         return updatedAt;
     }
 
-    // Lifecycle callbacks
+    public void setUpdatedAt(LocalDateTime updatedAt) {
+        this.updatedAt = updatedAt;
+    }
+
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();

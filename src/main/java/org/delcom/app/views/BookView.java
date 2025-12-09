@@ -2,67 +2,64 @@ package org.delcom.app.views;
 
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.List;
 import java.util.UUID;
 
 import org.delcom.app.dto.CoverBookForm;
 import org.delcom.app.dto.BookForm;
 import org.delcom.app.entities.Book;
-import org.delcom.app.entities.Borrowing;
 import org.delcom.app.entities.User;
 import org.delcom.app.services.FileStorageService;
 import org.delcom.app.services.BookService;
-import org.delcom.app.services.BorrowingService;
 import org.delcom.app.utils.ConstUtil;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import jakarta.servlet.http.HttpSession;
-import jakarta.validation.Valid;
 
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ResponseBody;
+import jakarta.validation.Valid;
 
 @Controller
 @RequestMapping("/books")
 public class BookView {
 
     private final BookService bookService;
-    private final BorrowingService borrowingService;
     private final FileStorageService fileStorageService;
 
-    public BookView(BookService bookService, BorrowingService borrowingService, FileStorageService fileStorageService) {
+    public BookView(BookService bookService, FileStorageService fileStorageService) {
         this.bookService = bookService;
-        this.borrowingService = borrowingService;
         this.fileStorageService = fileStorageService;
+    }
+
+    // Helper method untuk mendapatkan authenticated user
+    private User getAuthenticatedUser() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication instanceof AnonymousAuthenticationToken) {
+            return null;
+        }
+        Object principal = authentication.getPrincipal();
+        if (principal instanceof User) {
+            return (User) principal;
+        }
+        return null;
     }
 
     @PostMapping("/add")
     public String postAddBook(@Valid @ModelAttribute("bookForm") BookForm bookForm,
-            RedirectAttributes redirectAttributes,
-            HttpSession session,
-            Model model) {
+            RedirectAttributes redirectAttributes) {
 
-        // Autentikasi user
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if ((authentication instanceof AnonymousAuthenticationToken)) {
+        User authUser = getAuthenticatedUser();
+        if (authUser == null) {
             return "redirect:/auth/logout";
         }
-        Object principal = authentication.getPrincipal();
-        if (!(principal instanceof User)) {
-            return "redirect:/auth/logout";
-        }
-        User authUser = (User) principal;
 
         // Validasi form
         if (bookForm.getTitle() == null || bookForm.getTitle().isBlank()) {
@@ -96,49 +93,46 @@ public class BookView {
         }
 
         // Simpan buku
-        var entity = bookService.createBook(
-                authUser.getId(),
-                bookForm.getTitle(),
-                bookForm.getAuthor(),
-                bookForm.getIsbn(),
-                bookForm.getCategory(),
-                bookForm.getPublisher(),
-                bookForm.getPublicationYear(),
-                bookForm.getStock());
+        try {
+            Book entity = bookService.createBook(
+                    authUser.getId(),
+                    bookForm.getTitle().trim(),
+                    bookForm.getAuthor().trim(),
+                    bookForm.getIsbn().trim(),
+                    bookForm.getCategory().trim(),
+                    bookForm.getPublisher() != null ? bookForm.getPublisher().trim() : null,
+                    bookForm.getPublicationYear(),
+                    bookForm.getStock());
 
-        if (entity == null) {
-            redirectAttributes.addFlashAttribute("error", "Gagal menambahkan buku. ISBN mungkin sudah terdaftar.");
+            if (entity == null) {
+                redirectAttributes.addFlashAttribute("error", "Gagal menambahkan buku. ISBN mungkin sudah terdaftar.");
+                redirectAttributes.addFlashAttribute("addBookModalOpen", true);
+                return "redirect:/";
+            }
+
+            redirectAttributes.addFlashAttribute("success", "Buku berhasil ditambahkan!");
+            return "redirect:/";
+        } catch (Exception e) {
+            System.err.println("Error adding book: " + e.getMessage());
+            e.printStackTrace();
+            redirectAttributes.addFlashAttribute("error", "Terjadi kesalahan: " + e.getMessage());
             redirectAttributes.addFlashAttribute("addBookModalOpen", true);
             return "redirect:/";
         }
-
-        // Redirect dengan pesan sukses
-        redirectAttributes.addFlashAttribute("success", "Buku berhasil ditambahkan.");
-        return "redirect:/";
     }
 
     @PostMapping("/edit")
     public String postEditBook(@Valid @ModelAttribute("bookForm") BookForm bookForm,
-            RedirectAttributes redirectAttributes,
-            HttpSession session,
-            Model model) {
-        // Autentikasi user
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if ((authentication instanceof AnonymousAuthenticationToken)) {
+            RedirectAttributes redirectAttributes) {
+        
+        User authUser = getAuthenticatedUser();
+        if (authUser == null) {
             return "redirect:/auth/logout";
         }
-
-        Object principal = authentication.getPrincipal();
-        if (!(principal instanceof User)) {
-            return "redirect:/auth/logout";
-        }
-
-        User authUser = (User) principal;
 
         // Validasi form
         if (bookForm.getId() == null) {
             redirectAttributes.addFlashAttribute("error", "ID buku tidak valid");
-            redirectAttributes.addFlashAttribute("editBookModalOpen", true);
             return "redirect:/";
         }
 
@@ -178,14 +172,14 @@ public class BookView {
         }
 
         // Update buku
-        var updated = bookService.updateBook(
+        Book updated = bookService.updateBook(
                 authUser.getId(),
                 bookForm.getId(),
-                bookForm.getTitle(),
-                bookForm.getAuthor(),
-                bookForm.getIsbn(),
-                bookForm.getCategory(),
-                bookForm.getPublisher(),
+                bookForm.getTitle().trim(),
+                bookForm.getAuthor().trim(),
+                bookForm.getIsbn().trim(),
+                bookForm.getCategory().trim(),
+                bookForm.getPublisher() != null ? bookForm.getPublisher().trim() : null,
                 bookForm.getPublicationYear(),
                 bookForm.getStock());
 
@@ -196,34 +190,22 @@ public class BookView {
             return "redirect:/";
         }
 
-        // Redirect dengan pesan sukses
-        redirectAttributes.addFlashAttribute("success", "Buku berhasil diperbarui.");
+        redirectAttributes.addFlashAttribute("success", "Buku berhasil diperbarui!");
         return "redirect:/";
     }
 
     @PostMapping("/delete")
     public String postDeleteBook(@Valid @ModelAttribute("bookForm") BookForm bookForm,
-            RedirectAttributes redirectAttributes,
-            HttpSession session,
-            Model model) {
-
-        // Autentikasi user
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if ((authentication instanceof AnonymousAuthenticationToken)) {
+            RedirectAttributes redirectAttributes) {
+        
+        User authUser = getAuthenticatedUser();
+        if (authUser == null) {
             return "redirect:/auth/logout";
         }
-
-        Object principal = authentication.getPrincipal();
-        if (!(principal instanceof User)) {
-            return "redirect:/auth/logout";
-        }
-
-        User authUser = (User) principal;
 
         // Validasi form
         if (bookForm.getId() == null) {
             redirectAttributes.addFlashAttribute("error", "ID buku tidak valid");
-            redirectAttributes.addFlashAttribute("deleteBookModalOpen", true);
             return "redirect:/";
         }
 
@@ -238,11 +220,10 @@ public class BookView {
         Book existingBook = bookService.getBookById(authUser.getId(), bookForm.getId());
         if (existingBook == null) {
             redirectAttributes.addFlashAttribute("error", "Buku tidak ditemukan");
-            redirectAttributes.addFlashAttribute("deleteBookModalOpen", true);
-            redirectAttributes.addFlashAttribute("deleteBookModalId", bookForm.getId());
             return "redirect:/";
         }
 
+        // Validasi konfirmasi judul
         if (!existingBook.getTitle().equals(bookForm.getConfirmTitle())) {
             redirectAttributes.addFlashAttribute("error", "Konfirmasi judul tidak sesuai");
             redirectAttributes.addFlashAttribute("deleteBookModalOpen", true);
@@ -251,33 +232,22 @@ public class BookView {
         }
 
         // Hapus buku
-        boolean deleted = bookService.deleteBook(
-                authUser.getId(),
-                bookForm.getId());
+        boolean deleted = bookService.deleteBook(authUser.getId(), bookForm.getId());
         if (!deleted) {
             redirectAttributes.addFlashAttribute("error", "Gagal menghapus buku");
-            redirectAttributes.addFlashAttribute("deleteBookModalOpen", true);
-            redirectAttributes.addFlashAttribute("deleteBookModalId", bookForm.getId());
             return "redirect:/";
         }
 
-        // Redirect dengan pesan sukses
-        redirectAttributes.addFlashAttribute("success", "Buku berhasil dihapus.");
+        redirectAttributes.addFlashAttribute("success", "Buku berhasil dihapus!");
         return "redirect:/";
     }
 
     @GetMapping("/{bookId}")
     public String getDetailBook(@PathVariable UUID bookId, Model model) {
-        // Autentikasi user
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if ((authentication instanceof AnonymousAuthenticationToken)) {
+        User authUser = getAuthenticatedUser();
+        if (authUser == null) {
             return "redirect:/auth/logout";
         }
-        Object principal = authentication.getPrincipal();
-        if (!(principal instanceof User)) {
-            return "redirect:/auth/logout";
-        }
-        User authUser = (User) principal;
         model.addAttribute("auth", authUser);
 
         // Ambil buku
@@ -286,10 +256,6 @@ public class BookView {
             return "redirect:/";
         }
         model.addAttribute("book", book);
-
-        // Ambil riwayat peminjaman buku ini
-        List<Borrowing> borrowings = borrowingService.getBorrowingsByBookId(authUser.getId(), bookId);
-        model.addAttribute("borrowings", borrowings);
 
         // Cover Book Form
         CoverBookForm coverBookForm = new CoverBookForm();
@@ -301,20 +267,17 @@ public class BookView {
 
     @PostMapping("/edit-cover")
     public String postEditCoverBook(@Valid @ModelAttribute("coverBookForm") CoverBookForm coverBookForm,
-            RedirectAttributes redirectAttributes,
-            HttpSession session,
-            Model model) {
+            RedirectAttributes redirectAttributes) {
 
-        // Autentikasi user
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if ((authentication instanceof AnonymousAuthenticationToken)) {
+        User authUser = getAuthenticatedUser();
+        if (authUser == null) {
             return "redirect:/auth/logout";
         }
-        Object principal = authentication.getPrincipal();
-        if (!(principal instanceof User)) {
-            return "redirect:/auth/logout";
+
+        if (coverBookForm.getId() == null) {
+            redirectAttributes.addFlashAttribute("error", "ID buku tidak valid");
+            return "redirect:/";
         }
-        User authUser = (User) principal;
 
         if (coverBookForm.isEmpty()) {
             redirectAttributes.addFlashAttribute("error", "File cover tidak boleh kosong");
@@ -326,11 +289,10 @@ public class BookView {
         Book book = bookService.getBookById(authUser.getId(), coverBookForm.getId());
         if (book == null) {
             redirectAttributes.addFlashAttribute("error", "Buku tidak ditemukan");
-            redirectAttributes.addFlashAttribute("editCoverBookModalOpen", true);
             return "redirect:/";
         }
 
-        // Validasi manual file type
+        // Validasi file type
         if (!coverBookForm.isValidImage()) {
             redirectAttributes.addFlashAttribute("error", "Format file tidak didukung. Gunakan JPG, PNG, GIF, atau WEBP");
             redirectAttributes.addFlashAttribute("editCoverBookModalOpen", true);
@@ -348,13 +310,15 @@ public class BookView {
             // Simpan file
             String fileName = fileStorageService.storeFile(coverBookForm.getCoverFile(), coverBookForm.getId());
 
-            // Update buku dengan nama file cover
-            bookService.updateCover(coverBookForm.getId(), fileName);
+            // Update buku dengan nama file cover (FIX: tambah userId)
+            bookService.updateCover(authUser.getId(), coverBookForm.getId(), fileName);
 
-            redirectAttributes.addFlashAttribute("success", "Cover buku berhasil diupload");
+            redirectAttributes.addFlashAttribute("success", "Cover buku berhasil diupload!");
             return "redirect:/books/" + coverBookForm.getId();
         } catch (IOException e) {
-            redirectAttributes.addFlashAttribute("error", "Gagal mengupload cover");
+            System.err.println("Error uploading cover: " + e.getMessage());
+            e.printStackTrace();
+            redirectAttributes.addFlashAttribute("error", "Gagal mengupload cover: " + e.getMessage());
             redirectAttributes.addFlashAttribute("editCoverBookModalOpen", true);
             return "redirect:/books/" + coverBookForm.getId();
         }
@@ -362,18 +326,35 @@ public class BookView {
 
     @GetMapping("/cover/{filename:.+}")
     @ResponseBody
-    public Resource getCoverByFilename(@PathVariable String filename) {
+    public ResponseEntity<Resource> getCoverByFilename(@PathVariable String filename) {
         try {
             Path file = fileStorageService.loadFile(filename);
             Resource resource = new UrlResource(file.toUri());
 
-            if (resource.exists() || resource.isReadable()) {
-                return resource;
+            if (resource.exists() && resource.isReadable()) {
+                // Determine content type
+                String contentType = "application/octet-stream";
+                String fileName = filename.toLowerCase();
+                if (fileName.endsWith(".jpg") || fileName.endsWith(".jpeg")) {
+                    contentType = "image/jpeg";
+                } else if (fileName.endsWith(".png")) {
+                    contentType = "image/png";
+                } else if (fileName.endsWith(".gif")) {
+                    contentType = "image/gif";
+                } else if (fileName.endsWith(".webp")) {
+                    contentType = "image/webp";
+                }
+
+                return ResponseEntity.ok()
+                        .contentType(MediaType.parseMediaType(contentType))
+                        .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + filename + "\"")
+                        .body(resource);
             } else {
-                return null;
+                return ResponseEntity.notFound().build();
             }
         } catch (Exception e) {
-            return null;
+            System.err.println("Error loading cover: " + e.getMessage());
+            return ResponseEntity.notFound().build();
         }
     }
 }

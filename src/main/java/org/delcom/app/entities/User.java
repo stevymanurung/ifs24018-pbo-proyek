@@ -9,6 +9,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import jakarta.persistence.*;
 
 @Entity
+
 @Table(name = "users")
 @JsonPropertyOrder({ "id", "name", "email", "createdAt", "updatedAt" })
 @JsonInclude(JsonInclude.Include.NON_NULL)

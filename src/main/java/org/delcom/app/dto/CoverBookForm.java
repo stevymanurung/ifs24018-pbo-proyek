@@ -11,11 +11,9 @@ public class CoverBookForm {
     @NotNull(message = "Cover tidak boleh kosong")
     private MultipartFile coverFile;
 
-    // Constructor
     public CoverBookForm() {
     }
 
-    // Getters and Setters
     public UUID getId() {
         return id;
     }
@@ -32,7 +30,6 @@ public class CoverBookForm {
         this.coverFile = coverFile;
     }
 
-    // Helper methods
     public boolean isEmpty() {
         return coverFile == null || coverFile.isEmpty();
     }
@@ -41,7 +38,6 @@ public class CoverBookForm {
         return coverFile != null ? coverFile.getOriginalFilename() : null;
     }
 
-    // Validation methods
     public boolean isValidImage() {
         if (this.isEmpty()) {
             return false;

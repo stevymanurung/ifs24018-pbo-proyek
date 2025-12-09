@@ -14,7 +14,6 @@ public class BookForm {
     private Integer stock;
     private String confirmTitle;
 
-    // Constructor
     public BookForm() {
     }
 

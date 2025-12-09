@@ -9,181 +9,202 @@ import org.delcom.app.configs.AuthContext;
 import org.delcom.app.entities.Book;
 import org.delcom.app.entities.User;
 import org.delcom.app.services.BookService;
-import org.delcom.app.services.BorrowingService; // Tambahkan service ini untuk statistik
-import org.delcom.app.utils.ConstUtil;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-@Controller
+@RestController
+@RequestMapping("/api/books")
 public class BookController {
-
     private final BookService bookService;
-    private final BorrowingService borrowingService; 
 
     @Autowired
-    protected AuthContext authContext;
+    private AuthContext authContext;
 
-    public BookController(BookService bookService, BorrowingService borrowingService) {
+    public BookController(BookService bookService) {
         this.bookService = bookService;
-        this.borrowingService = borrowingService;
     }
 
-    // ========================================================================
-    // VIEW ENDPOINTS (Mengembalikan HTML)
-    // ========================================================================
+    @PostMapping
+    public ResponseEntity<ApiResponse<Map<String, UUID>>> createBook(@RequestBody Book reqBook) {
+        // Validation
+        if (reqBook.getTitle() == null || reqBook.getTitle().trim().isEmpty()) {
+            return ResponseEntity.badRequest()
+                    .body(new ApiResponse<>("fail", "Title tidak boleh kosong", null));
+        }
+        if (reqBook.getAuthor() == null || reqBook.getAuthor().trim().isEmpty()) {
+            return ResponseEntity.badRequest()
+                    .body(new ApiResponse<>("fail", "Author tidak boleh kosong", null));
+        }
+        if (reqBook.getIsbn() == null || reqBook.getIsbn().trim().isEmpty()) {
+            return ResponseEntity.badRequest()
+                    .body(new ApiResponse<>("fail", "ISBN tidak boleh kosong", null));
+        }
+        if (reqBook.getCategory() == null || reqBook.getCategory().trim().isEmpty()) {
+            return ResponseEntity.badRequest()
+                    .body(new ApiResponse<>("fail", "Category tidak boleh kosong", null));
+        }
+        if (reqBook.getStock() == null || reqBook.getStock() <= 0) {
+            return ResponseEntity.badRequest()
+                    .body(new ApiResponse<>("fail", "Stock harus lebih dari 0", null));
+        }
 
-    // 1. DASHBOARD / HOME
-    @GetMapping("/")
-    public String home(Model model,
-                       @RequestParam(required = false) String search,
-                       @RequestParam(required = false) boolean addBookModalOpen,
-                       @RequestParam(required = false) boolean editBookModalOpen,
-                       @RequestParam(required = false) boolean deleteBookModalOpen,
-                       @RequestParam(required = false) UUID editBookModalId,
-                       @RequestParam(required = false) UUID deleteBookModalId) {
-        
-        if (!authContext.isAuthenticated()) return "redirect:/" + ConstUtil.TEMPLATE_PAGES_AUTH_LOGIN;
+        // Authentication check
+        if (!authContext.isAuthenticated()) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(new ApiResponse<>("fail", "User tidak terautentikasi", null));
+        }
         User authUser = authContext.getAuthUser();
 
-        // Data Statistik untuk Dashboard
-        model.addAttribute("totalBooks", bookService.getAllBooks(authUser.getId(), null).size());
-        model.addAttribute("activeBorrowings", borrowingService.getBorrowingsByStatus(authUser.getId(), "DIPINJAM").size());
-        model.addAttribute("returnedBorrowings", borrowingService.getBorrowingsByStatus(authUser.getId(), "DIKEMBALIKAN").size());
-
-        // Data List Buku
-        model.addAttribute("books", bookService.getAllBooks(authUser.getId(), search));
-        model.addAttribute("search", search);
-        model.addAttribute("auth", authUser);
-
-        // Logika Membuka Modal (Sesuai parameter URL)
-        if (addBookModalOpen) {
-            model.addAttribute("addBookModalOpen", true);
-            model.addAttribute("bookForm", new Book());
-        }
-        if (editBookModalOpen && editBookModalId != null) {
-            Book book = bookService.getBookById(authUser.getId(), editBookModalId);
-            if(book != null) {
-                model.addAttribute("editBookModalOpen", true);
-                model.addAttribute("editBookModalId", editBookModalId);
-                model.addAttribute("bookForm", book);
-            }
-        }
-        if (deleteBookModalOpen && deleteBookModalId != null) {
-            model.addAttribute("deleteBookModalOpen", true);
-            model.addAttribute("deleteBookModalId", deleteBookModalId);
-            model.addAttribute("bookForm", new Book());
-        }
-
-        return ConstUtil.TEMPLATE_PAGES_HOME;
-    }
-
-    // 2. DETAIL BUKU
-    @GetMapping("/books/{id}")
-    public String bookDetail(@PathVariable UUID id, Model model) {
-        if (!authContext.isAuthenticated()) return "redirect:/" + ConstUtil.TEMPLATE_PAGES_AUTH_LOGIN;
-        
-        Book book = bookService.getBookById(authContext.getAuthUser().getId(), id);
-        if (book == null) return "redirect:/";
-
-        model.addAttribute("book", book);
-        model.addAttribute("auth", authContext.getAuthUser());
-        // Form dummy untuk modal jika dipanggil dari detail page
-        model.addAttribute("bookForm", book); 
-
-        return ConstUtil.TEMPLATE_PAGES_BOOKS_DETAIL;
-    }
-
-    // 3. PROSES TAMBAH BUKU (Form Submit)
-    @PostMapping("/books/add")
-    public String createBook(@ModelAttribute Book reqBook, @RequestParam("file") MultipartFile file, RedirectAttributes redirectAttributes) {
-        if (!authContext.isAuthenticated()) return "redirect:/login";
-        
-        // Simpan File Gambar (Implementasi sederhana)
-        if (!file.isEmpty()) {
-            String fileName = file.getOriginalFilename(); 
-         
-            reqBook.setCover(fileName); // Asumsi di Entity Book ada setCover
-        }
-
+        // Create book
         Book newBook = bookService.createBook(
-                authContext.getAuthUser().getId(),
-                reqBook.getTitle(),
-                reqBook.getAuthor(),
-                reqBook.getIsbn(),
-                reqBook.getCategory(),
-                reqBook.getPublisher(),
+                authUser.getId(),
+                reqBook.getTitle().trim(),
+                reqBook.getAuthor().trim(),
+                reqBook.getIsbn().trim(),
+                reqBook.getCategory().trim(),
+                reqBook.getPublisher() != null ? reqBook.getPublisher().trim() : null,
                 reqBook.getPublicationYear(),
                 reqBook.getStock());
 
         if (newBook == null) {
-            redirectAttributes.addFlashAttribute("error", "Gagal menambah buku. ISBN mungkin duplikat.");
-        } else {
-            redirectAttributes.addFlashAttribute("success", "Buku berhasil ditambahkan.");
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body(new ApiResponse<>("fail", "ISBN sudah terdaftar", null));
         }
 
-        return "redirect:/";
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(new ApiResponse<>("success", "Buku berhasil ditambahkan", 
+                      Map.of("id", newBook.getId())));
     }
 
-    // 4. PROSES EDIT BUKU (Form Submit)
-    @PostMapping("/books/edit")
-    public String updateBook(@ModelAttribute Book reqBook, @RequestParam("file") MultipartFile file, RedirectAttributes redirectAttributes) {
-        if (!authContext.isAuthenticated()) return "redirect:/login";
+    @GetMapping
+    public ResponseEntity<ApiResponse<Map<String, Object>>> getAllBooks(
+            @RequestParam(required = false) String search) {
+        
+        if (!authContext.isAuthenticated()) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(new ApiResponse<>("fail", "User tidak terautentikasi", null));
+        }
+        User authUser = authContext.getAuthUser();
 
-        // Logic update gambar jika ada file baru
-        if (!file.isEmpty()) {
-         
+        List<Book> books = bookService.getAllBooks(authUser.getId(), search);
+        return ResponseEntity.ok(new ApiResponse<>(
+                "success",
+                "Daftar buku berhasil diambil",
+                Map.of("books", books, "total", books.size())));
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<ApiResponse<Map<String, Book>>> getBookById(@PathVariable UUID id) {
+        if (!authContext.isAuthenticated()) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(new ApiResponse<>("fail", "User tidak terautentikasi", null));
+        }
+        User authUser = authContext.getAuthUser();
+
+        Book book = bookService.getBookById(authUser.getId(), id);
+        if (book == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(new ApiResponse<>("fail", "Buku tidak ditemukan", null));
         }
 
-        bookService.updateBook(
-                authContext.getAuthUser().getId(),
-                reqBook.getId(),
-                reqBook.getTitle(),
-                reqBook.getAuthor(),
-                reqBook.getIsbn(),
-                reqBook.getCategory(),
-                reqBook.getPublisher(),
+        return ResponseEntity.ok(new ApiResponse<>(
+                "success",
+                "Data buku berhasil diambil",
+                Map.of("book", book)));
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<ApiResponse<Map<String, Book>>> updateBook(
+            @PathVariable UUID id, 
+            @RequestBody Book reqBook) {
+        
+        // Validation
+        if (reqBook.getTitle() == null || reqBook.getTitle().trim().isEmpty()) {
+            return ResponseEntity.badRequest()
+                    .body(new ApiResponse<>("fail", "Title tidak boleh kosong", null));
+        }
+        if (reqBook.getAuthor() == null || reqBook.getAuthor().trim().isEmpty()) {
+            return ResponseEntity.badRequest()
+                    .body(new ApiResponse<>("fail", "Author tidak boleh kosong", null));
+        }
+        if (reqBook.getIsbn() == null || reqBook.getIsbn().trim().isEmpty()) {
+            return ResponseEntity.badRequest()
+                    .body(new ApiResponse<>("fail", "ISBN tidak boleh kosong", null));
+        }
+        if (reqBook.getCategory() == null || reqBook.getCategory().trim().isEmpty()) {
+            return ResponseEntity.badRequest()
+                    .body(new ApiResponse<>("fail", "Category tidak boleh kosong", null));
+        }
+        if (reqBook.getStock() == null || reqBook.getStock() <= 0) {
+            return ResponseEntity.badRequest()
+                    .body(new ApiResponse<>("fail", "Stock harus lebih dari 0", null));
+        }
+
+        // Authentication check
+        if (!authContext.isAuthenticated()) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(new ApiResponse<>("fail", "User tidak terautentikasi", null));
+        }
+        User authUser = authContext.getAuthUser();
+
+        // Update book
+        Book updatedBook = bookService.updateBook(
+                authUser.getId(),
+                id,
+                reqBook.getTitle().trim(),
+                reqBook.getAuthor().trim(),
+                reqBook.getIsbn().trim(),
+                reqBook.getCategory().trim(),
+                reqBook.getPublisher() != null ? reqBook.getPublisher().trim() : null,
                 reqBook.getPublicationYear(),
                 reqBook.getStock());
 
-        redirectAttributes.addFlashAttribute("success", "Data buku berhasil diperbarui.");
-        return "redirect:/";
+        if (updatedBook == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(new ApiResponse<>("fail", "Buku tidak ditemukan atau ISBN sudah digunakan", null));
+        }
+
+        return ResponseEntity.ok(new ApiResponse<>(
+                "success", 
+                "Data buku berhasil diperbarui", 
+                Map.of("book", updatedBook)));
     }
 
-    // 5. PROSES HAPUS BUKU (Form Submit)
-    @PostMapping("/books/delete")
-    public String deleteBook(@ModelAttribute Book reqBook, RedirectAttributes redirectAttributes) {
-        if (!authContext.isAuthenticated()) return "redirect:/login";
+    @DeleteMapping("/{id}")
+    public ResponseEntity<ApiResponse<String>> deleteBook(@PathVariable UUID id) {
+        if (!authContext.isAuthenticated()) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(new ApiResponse<>("fail", "User tidak terautentikasi", null));
+        }
+        User authUser = authContext.getAuthUser();
 
-        bookService.deleteBook(authContext.getAuthUser().getId(), reqBook.getId());
-        redirectAttributes.addFlashAttribute("success", "Buku berhasil dihapus.");
-        
-        return "redirect:/";
+        boolean status = bookService.deleteBook(authUser.getId(), id);
+        if (!status) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(new ApiResponse<>("fail", "Buku tidak ditemukan", null));
+        }
+
+        return ResponseEntity.ok(new ApiResponse<>(
+                "success",
+                "Buku berhasil dihapus",
+                null));
     }
 
-    // ========================================================================
-    // API ENDPOINTS (JSON) - Wajib ada untuk Chart.js di home.html
-    // ========================================================================
+    // Endpoint untuk mendapatkan kategori (untuk chart)
+    @GetMapping("/categories")
+    public ResponseEntity<ApiResponse<Map<String, List<String>>>> getCategories() {
+        if (!authContext.isAuthenticated()) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(new ApiResponse<>("fail", "User tidak terautentikasi", null));
+        }
+        User authUser = authContext.getAuthUser();
 
-    @GetMapping("/api/books")
-    @ResponseBody 
-    public ResponseEntity<ApiResponse<Map<String, List<Book>>>> getAllBooksApi(@RequestParam(required = false) String search) {
-        if (!authContext.isAuthenticated()) return ResponseEntity.status(403).build();
-
-        List<Book> books = bookService.getAllBooks(authContext.getAuthUser().getId(), search);
-        return ResponseEntity.ok(new ApiResponse<>("success", "Data fetched", Map.of("books", books)));
-    }
-
-    @GetMapping("/api/books/{id}")
-    @ResponseBody
-    public ResponseEntity<ApiResponse<Map<String, Book>>> getBookByIdApi(@PathVariable UUID id) {
-        if (!authContext.isAuthenticated()) return ResponseEntity.status(403).build();
-
-        Book book = bookService.getBookById(authContext.getAuthUser().getId(), id);
-        return ResponseEntity.ok(new ApiResponse<>("success", "Data fetched", Map.of("book", book)));
+        List<String> categories = bookService.getAllCategories(authUser.getId());
+        return ResponseEntity.ok(new ApiResponse<>(
+                "success",
+                "Daftar kategori berhasil diambil",
+                Map.of("categories", categories)));
     }
 }

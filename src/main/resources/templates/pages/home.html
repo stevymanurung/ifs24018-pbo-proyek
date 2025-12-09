@@ -1,367 +1,465 @@
 <!DOCTYPE html>
-<html lang="id" xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org" 
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layouts/base}">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard - Aplikasi Perpustakaan</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
-    <style>
-        body {
-            background-color: #f8f9fa;
-        }
-        .stat-card {
-            border-left: 4px solid;
-            transition: transform 0.2s;
-        }
-        .stat-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-        }
-        .book-card {
-            transition: all 0.3s;
-            border: none;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-        .book-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 8px 16px rgba(0,0,0,0.15);
-        }
-        .book-cover {
-            height: 200px;
-            object-fit: cover;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        }
-        .badge-stock {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-        }
-    </style>
+    <title>Home - Library Admin</title>
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
-        <div class="container-fluid">
-            <a class="navbar-brand" href="/">
-                <i class="bi bi-book-half me-2"></i>
-                Perpustakaan Digital
-            </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto">
-                    <li class="nav-item">
-                        <a class="nav-link active" href="/">
-                            <i class="bi bi-house-door me-1"></i> Dashboard
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="/borrowings">
-                            <i class="bi bi-journal-bookmark me-1"></i> Peminjaman
-                        </a>
-                    </li>
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
-                            <i class="bi bi-person-circle me-1"></i>
-                            <span th:text="${auth.name}">User</span>
-                        </a>
-                        <ul class="dropdown-menu dropdown-menu-end">
-                            <li><a class="dropdown-item" href="/auth/logout">
-                                <i class="bi bi-box-arrow-right me-2"></i> Logout
-                            </a></li>
-                        </ul>
-                    </li>
-                </ul>
-            </div>
-        </div>
-    </nav>
-
-    <div class="container-fluid mt-4">
-        <!-- Alert Messages -->
-        <div th:if="${success}" class="alert alert-success alert-dismissible fade show" role="alert">
-            <i class="bi bi-check-circle-fill me-2"></i>
-            <span th:text="${success}"></span>
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-
-        <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
-            <i class="bi bi-exclamation-triangle-fill me-2"></i>
-            <span th:text="${error}"></span>
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-
-        <!-- Statistics Cards -->
-        <div class="row mb-4">
-            <div class="col-md-4">
-                <div class="card stat-card border-primary">
-                    <div class="card-body">
+    <main layout:fragment="content">
+        <div class="container mt-4">
+            <!-- Statistics Cards -->
+            <div class="row mb-4">
+                <div class="col-md-3 mb-3">
+                    <div class="stat-card">
                         <div class="d-flex justify-content-between align-items-center">
                             <div>
-                                <h6 class="text-muted mb-1">Total Buku</h6>
-                                <h2 class="mb-0" th:text="${totalBooks}">0</h2>
+                                <h6 class="mb-0 text-white-50">Total Books</h6>
+                                <h2 class="mb-0 fw-bold" th:text="${totalBooks}">0</h2>
                             </div>
-                            <div class="bg-primary rounded-circle p-3">
-                                <i class="bi bi-book fs-2 text-white"></i>
+                            <i class="bi bi-book fs-1 opacity-50"></i>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-3 mb-3">
+                    <div class="stat-card" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="mb-0 text-white-50">Categories</h6>
+                                <h2 class="mb-0 fw-bold" th:text="${totalCategories}">0</h2>
                             </div>
+                            <i class="bi bi-tag fs-1 opacity-50"></i>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-3 mb-3">
+                    <div class="stat-card" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="mb-0 text-white-50">Available</h6>
+                                <h2 class="mb-0 fw-bold" th:text="${totalAvailable}">0</h2>
+                            </div>
+                            <i class="bi bi-check-circle fs-1 opacity-50"></i>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-3 mb-3">
+                    <div class="stat-card" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="mb-0 text-white-50">Total Stock</h6>
+                                <h2 class="mb-0 fw-bold" th:text="${totalStock}">0</h2>
+                            </div>
+                            <i class="bi bi-box-seam fs-1 opacity-50"></i>
                         </div>
                     </div>
                 </div>
             </div>
-            <div class="col-md-4">
-                <div class="card stat-card border-warning">
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <h6 class="text-muted mb-1">Sedang Dipinjam</h6>
-                                <h2 class="mb-0" th:text="${activeBorrowings}">0</h2>
-                            </div>
-                            <div class="bg-warning rounded-circle p-3">
-                                <i class="bi bi-hourglass-split fs-2 text-white"></i>
-                            </div>
+
+            <!-- Action Bar -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-md-6 mb-3 mb-md-0">
+                            <h4 class="mb-0">
+                                <i class="bi bi-collection me-2"></i>
+                                Book Collection
+                            </h4>
+                        </div>
+                        <div class="col-md-6 text-md-end">
+                            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addBookModal">
+                                <i class="bi bi-plus-lg me-2"></i>
+                                Add New Book
+                            </button>
                         </div>
                     </div>
                 </div>
             </div>
-            <div class="col-md-4">
-                <div class="card stat-card border-success">
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <h6 class="text-muted mb-1">Sudah Dikembalikan</h6>
-                                <h2 class="mb-0" th:text="${returnedBorrowings}">0</h2>
-                            </div>
-                            <div class="bg-success rounded-circle p-3">
-                                <i class="bi bi-check-circle fs-2 text-white"></i>
-                            </div>
+
+            <!-- Search Bar -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <form th:action="@{/}" method="get">
+                        <div class="input-group">
+                            <span class="input-group-text">
+                                <i class="bi bi-search"></i>
+                            </span>
+                            <input type="text" name="search" class="form-control" 
+                                   placeholder="Search by title, author, ISBN, or category..."
+                                   th:value="${search}">
+                            <button class="btn btn-primary" type="submit">
+                                Search
+                            </button>
+                            <a th:href="@{/}" class="btn btn-outline-secondary" th:if="${search != null && !search.isEmpty()}">
+                                <i class="bi bi-x-lg"></i> Clear
+                            </a>
                         </div>
-                    </div>
+                    </form>
                 </div>
             </div>
-        </div>
 
-        <!-- Chart Section -->
-        <div class="row mb-4">
-            <div class="col-md-6">
-                <div class="card">
-                    <div class="card-header bg-white">
-                        <h5 class="mb-0">
-                            <i class="bi bi-bar-chart me-2"></i>
-                            Statistik Peminjaman
-                        </h5>
-                    </div>
-                    <div class="card-body">
-                        <canvas id="borrowingChart"></canvas>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-6">
-                <div class="card">
-                    <div class="card-header bg-white">
-                        <h5 class="mb-0">
-                            <i class="bi bi-pie-chart me-2"></i>
-                            Kategori Buku
-                        </h5>
-                    </div>
-                    <div class="card-body">
-                        <canvas id="categoryChart"></canvas>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Books Section -->
-        <div class="card">
-            <div class="card-header bg-white">
-                <div class="row align-items-center">
-                    <div class="col-md-6">
-                        <h5 class="mb-0">
-                            <i class="bi bi-bookshelf me-2"></i>
-                            Daftar Buku
-                        </h5>
-                    </div>
-                    <div class="col-md-6 text-end">
-                        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addBookModal">
-                            <i class="bi bi-plus-circle me-1"></i> Tambah Buku
+            <!-- Books Table -->
+            <div class="card">
+                <div class="card-body">
+                    <div th:if="${books.isEmpty()}" class="text-center py-5">
+                        <i class="bi bi-inbox display-1 text-muted"></i>
+                        <h4 class="mt-3 text-muted">No books found</h4>
+                        <p class="text-muted" th:if="${search != null && !search.isEmpty()}">
+                            Try adjusting your search or 
+                            <a th:href="@{/}">clear the filter</a>
+                        </p>
+                        <button type="button" class="btn btn-primary mt-3" 
+                                data-bs-toggle="modal" data-bs-target="#addBookModal"
+                                th:if="${search == null || search.isEmpty()}">
+                            <i class="bi bi-plus-lg me-2"></i>
+                            Add Your First Book
                         </button>
                     </div>
+
+                    <div th:if="${!books.isEmpty()}" class="table-responsive">
+                        <table class="table table-hover align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th width="100">Cover</th>
+                                    <th>Title</th>
+                                    <th>Author</th>
+                                    <th>ISBN</th>
+                                    <th>Category</th>
+                                    <th class="text-center">Stock</th>
+                                    <th class="text-center">Available</th>
+                                    <th width="150" class="text-center">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="book : ${books}">
+                                    <td>
+                                        <img th:if="${book.cover != null}" 
+                                             th:src="@{'/books/cover/' + ${book.cover}}" 
+                                             class="book-cover-thumbnail"
+                                             alt="Book Cover">
+                                        <div th:if="${book.cover == null}" 
+                                             class="book-cover-thumbnail bg-secondary d-flex align-items-center justify-content-center">
+                                            <i class="bi bi-image text-white fs-3"></i>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <a th:href="@{'/books/' + ${book.id}}" 
+                                           class="text-decoration-none fw-semibold text-primary"
+                                           th:text="${book.title}">Title</a>
+                                    </td>
+                                    <td th:text="${book.author}">Author</td>
+                                    <td>
+                                        <code th:text="${book.isbn}">ISBN</code>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-info" th:text="${book.category}">Category</span>
+                                    </td>
+                                    <td class="text-center">
+                                        <span class="badge bg-primary" th:text="${book.stock}">0</span>
+                                    </td>
+                                    <td class="text-center">
+                                        <span class="badge"
+                                              th:classappend="${book.availableStock > 0 ? 'bg-success' : 'bg-danger'}"
+                                              th:text="${book.availableStock}">0</span>
+                                    </td>
+                                    <td class="text-center">
+                                        <div class="btn-group btn-group-sm">
+                                            <a th:href="@{'/books/' + ${book.id}}" 
+                                               class="btn btn-outline-primary"
+                                               title="View Details">
+                                                <i class="bi bi-eye"></i>
+                                            </a>
+                                            <!-- PERBAIKAN: Tombol Edit diperbaiki -->
+                                            <button type="button" 
+                                                    class="btn btn-outline-warning"
+                                                    th:data-id="${book.id}"
+                                                    onclick="openEditModal(this.getAttribute('data-id'))"
+                                                    title="Edit">
+                                                <i class="bi bi-pencil"></i>
+                                            </button>
+                                            <button type="button" 
+                                                    class="btn btn-outline-danger"
+                                                    th:data-id="${book.id}"
+                                                    th:data-title="${book.title}"
+                                                    onclick="openDeleteModal(this.getAttribute('data-id'), this.getAttribute('data-title'))"
+                                                    title="Delete">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
-            <div class="card-body">
-                <!-- Search Bar -->
-                <form method="get" action="/" class="mb-4">
-                    <div class="input-group">
-                        <span class="input-group-text">
-                            <i class="bi bi-search"></i>
-                        </span>
-                        <input type="text" class="form-control" name="search" 
-                               th:value="${search}" placeholder="Cari buku berdasarkan judul, penulis, ISBN, atau kategori...">
-                        <button class="btn btn-outline-primary" type="submit">Cari</button>
-                        <a href="/" class="btn btn-outline-secondary">Reset</a>
-                    </div>
-                </form>
 
-                <!-- Books Grid -->
-                <div class="row" th:if="${books != null and !books.isEmpty()}">
-                    <div class="col-md-3 mb-4" th:each="book : ${books}">
-                        <div class="card book-card h-100">
-                            <div class="position-relative">
-                                <img th:if="${book.cover != null}" 
-                                     th:src="@{'/books/cover/' + ${book.cover}}" 
-                                     class="card-img-top book-cover" 
-                                     th:alt="${book.title}">
-                                <div th:if="${book.cover == null}" 
-                                     class="card-img-top book-cover d-flex align-items-center justify-content-center text-white">
-                                    <i class="bi bi-book fs-1"></i>
-                                </div>
-                                <span class="badge bg-info badge-stock" th:text="${'Stok: ' + book.availableStock + '/' + book.stock}">
-                                    Stok: 0/0
-                                </span>
-                            </div>
-                            <div class="card-body">
-                                <h6 class="card-title" th:text="${book.title}">Judul Buku</h6>
-                                <p class="card-text text-muted small mb-2">
-                                    <i class="bi bi-person me-1"></i>
-                                    <span th:text="${book.author}">Penulis</span>
-                                </p>
-                                <p class="card-text">
-                                    <span class="badge bg-secondary" th:text="${book.category}">Kategori</span>
-                                </p>
-                            </div>
-                            <div class="card-footer bg-white border-0">
-                                <div class="btn-group w-100" role="group">
-                                    <a th:href="@{'/books/' + ${book.id}}" class="btn btn-sm btn-outline-primary">
-                                        <i class="bi bi-eye"></i> Detail
-                                    </a>
-                                    <button type="button" class="btn btn-sm btn-outline-warning" 
-                                            th:onclick="'editBook(\'' + ${book.id} + '\')'">
-                                        <i class="bi bi-pencil"></i> Edit
-                                    </button>
-                                    <button type="button" class="btn btn-sm btn-outline-danger" 
-                                            th:onclick="'deleteBook(\'' + ${book.id} + '\')'">
-                                        <i class="bi bi-trash"></i> Hapus
-                                    </button>
-                                </div>
-                            </div>
+            <!-- Chart Section -->
+            <div class="row mt-4" th:if="${!books.isEmpty()}">
+                <div class="col-md-6 mb-4">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title mb-3">
+                                <i class="bi bi-pie-chart me-2"></i>
+                                Books by Category
+                            </h5>
+                            <canvas id="categoryChart"></canvas>
                         </div>
                     </div>
                 </div>
-
-                <!-- Empty State -->
-                <div th:if="${books == null or books.isEmpty()}" class="text-center py-5">
-                    <i class="bi bi-inbox display-1 text-muted"></i>
-                    <p class="text-muted mt-3">
-                        <span th:if="${search != null and !search.isEmpty()}">
-                            Tidak ada buku yang ditemukan dengan kata kunci "<strong th:text="${search}"></strong>"
-                        </span>
-                        <span th:if="${search == null or search.isEmpty()}">
-                            Belum ada buku. Klik tombol "Tambah Buku" untuk memulai.
-                        </span>
-                    </p>
+                <div class="col-md-6 mb-4">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title mb-3">
+                                <i class="bi bi-bar-chart me-2"></i>
+                                Stock Overview (Top 10)
+                            </h5>
+                            <canvas id="stockChart"></canvas>
+                        </div>
+                    </div>
                 </div>
-                </div>
+            </div>
         </div>
-    </div>
 
-    <!-- Include Modals -->
-<div th:replace="~{models/books/add :: }"></div>
-<div th:replace="~{models/books/edit :: }"></div>
-<div th:replace="~{models/books/delete :: }"></div>
+        <!-- Modals (Menggunakan path 'models' sesuai struktur folder Anda) -->
+        <div th:replace="~{models/books/add :: addBookModal}"></div>
+        <div th:replace="~{models/books/edit :: editBookModal}"></div>
+        <div th:replace="~{models/books/delete :: deleteBookModal}"></div>
+    </main>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<script>
-    // Chart.js - Borrowing Statistics
-    const borrowingCtx = document.getElementById('borrowingChart').getContext('2d');
-    new Chart(borrowingCtx, {
-        type: 'bar',
-        data: {
-            labels: ['Dipinjam', 'Dikembalikan'],
-            datasets: [{
-                label: 'Jumlah',
-                data: [/*[[${activeBorrowings}]]*/ 0, /*[[${returnedBorrowings}]]*/ 0],
-                backgroundColor: [
-                    'rgba(255, 193, 7, 0.7)',
-                    'rgba(25, 135, 84, 0.7)'
-                ],
-                borderColor: [
-                    'rgb(255, 193, 7)',
-                    'rgb(25, 135, 84)'
-                ],
-                borderWidth: 2
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: true,
-            plugins: {
-                legend: {
-                    display: false
+    <th:block layout:fragment="scripts">
+        <script th:inline="javascript">
+            /*<![CDATA[*/
+            const books = /*[[${books}]]*/ [];
+            
+            document.addEventListener('DOMContentLoaded', function() {
+                // Initialize charts if books exist
+                if (books && books.length > 0) {
+                    initializeCharts();
                 }
-            },
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    ticks: {
-                        stepSize: 1
+
+                // Setup delete confirmation validation
+                setupDeleteConfirmation();
+
+                // Show success/error toast messages
+                const successMsg = /*[[${success}]]*/ null;
+                const errorMsg = /*[[${error}]]*/ null;
+                
+                if (successMsg) {
+                    showToast('success', successMsg);
+                }
+                if (errorMsg) {
+                    // Logic ini untuk memastikan toast error muncul jika bukan error dari modal form
+                    // Tapi jika error dari form modal (seperti validasi), modal biasanya dirender ulang oleh controller
+                    showToast('error', errorMsg);
+                    
+                    // Jika ada error dari server saat submit add/edit, 
+                    // controller Anda harus mengirim flag 'addBookModalOpen' dsb.
+                    if (/*[[${addBookModalOpen}]]*/ false) {
+                        new bootstrap.Modal(document.getElementById('addBookModal')).show();
                     }
+                    if (/*[[${editBookModalOpen}]]*/ false) {
+                         // Perlu logic khusus jika ingin membuka modal edit otomatis saat error server
+                        const bookId = /*[[${editBookModalId}]]*/ null;
+                        if(bookId) openEditModal(bookId); 
+                    }
+                }
+            });
+
+            function setupDeleteConfirmation() {
+                const confirmInput = document.getElementById('deleteConfirmTitle');
+                const deleteBtn = document.getElementById('confirmDeleteBtn');
+                const titleDisplay = document.getElementById('deleteBookTitleDisplay');
+                
+                if (confirmInput && deleteBtn && titleDisplay) {
+                    confirmInput.addEventListener('input', function() {
+                        const inputValue = this.value.trim();
+                        const expectedTitle = titleDisplay.textContent.trim();
+                        deleteBtn.disabled = inputValue !== expectedTitle;
+                    });
                 }
             }
-        }
-    });
 
-    // Chart.js - Category Distribution
-    fetch('/api/books?search=', {
-        headers: {
-            'Authorization': 'Bearer ' + localStorage.getItem('authToken')
-        }
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.status === 'success') {
-            const books = data.data.books;
-            const categoryCount = {};
-            
-            books.forEach(book => {
-                categoryCount[book.category] = (categoryCount[book.category] || 0) + 1;
-            });
-
-            const categoryCtx = document.getElementById('categoryChart').getContext('2d');
-            new Chart(categoryCtx, {
-                type: 'doughnut',
-                data: {
-                    labels: Object.keys(categoryCount),
-                    datasets: [{
-                        data: Object.values(categoryCount),
-                        backgroundColor: [
-                            'rgba(255, 99, 132, 0.7)',
-                            'rgba(54, 162, 235, 0.7)',
-                            'rgba(255, 206, 86, 0.7)',
-                            'rgba(75, 192, 192, 0.7)',
-                            'rgba(153, 102, 255, 0.7)',
-                            'rgba(255, 159, 64, 0.7)'
-                        ],
-                        borderWidth: 2
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: true,
-                    plugins: {
-                        legend: {
-                            position: 'bottom'
-                        }
-                    }
+            // PERBAIKAN: Fungsi Edit yang lebih aman
+            function openEditModal(bookId) {
+                console.log("Opening edit modal for ID:", bookId);
+                
+                if (!books || books.length === 0) {
+                    console.error("No books data found");
+                    return;
                 }
-            });
-        }
-    });
 
-    function editBook(id) {
-        window.location.href = '/?editBookModalOpen=true&editBookModalId=' + id;
-    }
+                // Gunakan toString() untuk perbandingan yang aman (angka vs string)
+                const book = books.find(b => b.id.toString() === bookId.toString());
+                
+                if (!book) {
+                    console.error("Book not found for ID:", bookId);
+                    return;
+                }
 
-    function deleteBook(id) {
-        window.location.href = '/?deleteBookModalOpen=true&deleteBookModalId=' + id;
-    }
-</script>
+                // Populate form fields
+                document.getElementById('editBookId').value = book.id;
+                document.getElementById('editTitle').value = book.title;
+                document.getElementById('editAuthor').value = book.author;
+                document.getElementById('editIsbn').value = book.isbn;
+                document.getElementById('editCategory').value = book.category;
+                document.getElementById('editPublisher').value = book.publisher || '';
+                document.getElementById('editPublicationYear').value = book.publicationYear || '';
+                document.getElementById('editStock').value = book.stock;
+                
+                // Update form action URL
+                const form = document.getElementById('editBookForm');
+                if (form) {
+                    form.action = '/books/edit/' + book.id;
+                }
+
+                // Show modal menggunakan getOrCreateInstance
+                const modalEl = document.getElementById('editBookModal');
+                if (modalEl) {
+                    const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+                    modal.show();
+                }
+            }
+
+            function openDeleteModal(bookId, bookTitle) {
+                // Set values
+                document.getElementById('deleteBookId').value = bookId;
+                document.getElementById('deleteBookTitleDisplay').textContent = bookTitle;
+                const confirmInput = document.getElementById('deleteConfirmTitle');
+                confirmInput.placeholder = 'Type: ' + bookTitle;
+                confirmInput.value = '';
+                
+                // Update form action URL
+                const form = document.getElementById('deleteBookForm');
+                if (form) {
+                    form.action = '/books/delete/' + bookId;
+                }
+                
+                // Reset and disable delete button
+                const deleteBtn = document.getElementById('confirmDeleteBtn');
+                if (deleteBtn) {
+                    deleteBtn.disabled = true;
+                }
+                
+                // Show modal
+                const modalEl = document.getElementById('deleteBookModal');
+                if (modalEl) {
+                    const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+                    modal.show();
+                }
+            }
+
+            function showToast(type, message) {
+                // Create toast container if not exists
+                let toastContainer = document.querySelector('.toast-container');
+                if (!toastContainer) {
+                    toastContainer = document.createElement('div');
+                    toastContainer.className = 'toast-container position-fixed top-0 end-0 p-3';
+                    toastContainer.style.zIndex = '9999';
+                    document.body.appendChild(toastContainer);
+                }
+
+                // Create toast
+                const toastId = 'toast-' + Date.now();
+                const bgClass = type === 'success' ? 'bg-success' : 'bg-danger';
+                const icon = type === 'success' ? 'check-circle-fill' : 'exclamation-triangle-fill';
+                
+                const toastHTML = `
+                    <div id="${toastId}" class="toast align-items-center text-white ${bgClass} border-0" role="alert" aria-live="assertive" aria-atomic="true">
+                        <div class="d-flex">
+                            <div class="toast-body">
+                                <i class="bi bi-${icon} me-2"></i>
+                                ${message}
+                            </div>
+                            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                        </div>
+                    </div>
+                `;
+                
+                toastContainer.insertAdjacentHTML('beforeend', toastHTML);
+                
+                const toastElement = document.getElementById(toastId);
+                const toast = new bootstrap.Toast(toastElement, { delay: 3000 });
+                toast.show();
+                
+                // Remove toast after hidden
+                toastElement.addEventListener('hidden.bs.toast', function() {
+                    toastElement.remove();
+                });
+            }
+
+            function initializeCharts() {
+                // Category Distribution Chart
+                const categoryData = {};
+                books.forEach(book => {
+                    categoryData[book.category] = (categoryData[book.category] || 0) + 1;
+                });
+
+                const categoryChart = document.getElementById('categoryChart');
+                if (categoryChart) {
+                    new Chart(categoryChart, {
+                        type: 'doughnut',
+                        data: {
+                            labels: Object.keys(categoryData),
+                            datasets: [{
+                                data: Object.values(categoryData),
+                                backgroundColor: [
+                                    '#4f46e5', '#f59e0b', '#10b981', '#ef4444', 
+                                    '#8b5cf6', '#ec4899', '#06b6d4', '#f97316'
+                                ]
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            plugins: {
+                                legend: { position: 'bottom' }
+                            }
+                        }
+                    });
+                }
+
+                // Top 10 Stock Chart
+                const sortedBooks = [...books].sort((a, b) => b.stock - a.stock).slice(0, 10);
+                const stockLabels = sortedBooks.map(b => b.title.length > 20 ? b.title.substring(0, 20) + '...' : b.title);
+                const stockData = sortedBooks.map(b => b.stock);
+                const availableData = sortedBooks.map(b => b.availableStock);
+
+                const stockChart = document.getElementById('stockChart');
+                if (stockChart) {
+                    new Chart(stockChart, {
+                        type: 'bar',
+                        data: {
+                            labels: stockLabels,
+                            datasets: [
+                                {
+                                    label: 'Total Stock',
+                                    data: stockData,
+                                    backgroundColor: '#4f46e5'
+                                },
+                                {
+                                    label: 'Available',
+                                    data: availableData,
+                                    backgroundColor: '#10b981'
+                                }
+                            ]
+                        },
+                        options: {
+                            responsive: true,
+                            scales: {
+                                y: { beginAtZero: true }
+                            },
+                            plugins: {
+                                legend: { position: 'bottom' }
+                            }
+                        }
+                    });
+                }
+            }
+            /*]]>*/
+        </script>
+    </th:block>
+</body>
+</html>
