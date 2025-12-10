@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <body>
-    <div th:fragment="addBookModal" class="modal fade" id="addBookModal" tabindex="-1">
+    <div th:fragment="addBookModal" class="modal fade" id="addBookModal" tabindex="-1" data-bs-backdrop="static">
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header bg-gradient-primary text-white">
@@ -12,10 +12,10 @@
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
                 
-                <form th:action="@{/books/add}" method="post">
+                <form th:action="@{/books/add}" method="post" id="addBookForm">
                     <div class="modal-body">
                         <!-- Error Message -->
-                        <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+                        <div th:if="${error != null and addBookModalOpen}" class="alert alert-danger alert-dismissible fade show" role="alert">
                             <i class="bi bi-exclamation-triangle-fill me-2"></i>
                             <span th:text="${error}"></span>
                             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
@@ -29,9 +29,12 @@
                                     Title <span class="text-danger">*</span>
                                 </label>
                                 <input type="text" class="form-control" id="title" 
-                                       name="title" required
+                                       name="title" required maxlength="255"
                                        th:value="${bookForm != null ? bookForm.title : ''}"
                                        placeholder="Enter book title">
+                                <div class="invalid-feedback">
+                                    Please provide a book title.
+                                </div>
                             </div>
 
                             <!-- Author -->
@@ -41,9 +44,12 @@
                                     Author <span class="text-danger">*</span>
                                 </label>
                                 <input type="text" class="form-control" id="author" 
-                                       name="author" required
+                                       name="author" required maxlength="255"
                                        th:value="${bookForm != null ? bookForm.author : ''}"
                                        placeholder="Enter author name">
+                                <div class="invalid-feedback">
+                                    Please provide an author name.
+                                </div>
                             </div>
 
                             <!-- ISBN -->
@@ -53,9 +59,12 @@
                                     ISBN <span class="text-danger">*</span>
                                 </label>
                                 <input type="text" class="form-control" id="isbn" 
-                                       name="isbn" required
+                                       name="isbn" required maxlength="20"
                                        th:value="${bookForm != null ? bookForm.isbn : ''}"
                                        placeholder="978-xxx-xxxx-xx-x">
+                                <div class="invalid-feedback">
+                                    Please provide a valid ISBN.
+                                </div>
                             </div>
 
                             <!-- Category -->
@@ -79,6 +88,9 @@
                                     <option value="Art" th:selected="${bookForm != null && bookForm.category == 'Art'}">Art</option>
                                     <option value="Other" th:selected="${bookForm != null && bookForm.category == 'Other'}">Other</option>
                                 </select>
+                                <div class="invalid-feedback">
+                                    Please select a category.
+                                </div>
                             </div>
 
                             <!-- Stock -->
@@ -88,9 +100,12 @@
                                     Stock <span class="text-danger">*</span>
                                 </label>
                                 <input type="number" class="form-control" id="stock" 
-                                       name="stock" required min="1"
-                                       th:value="${bookForm != null ? bookForm.stock : ''}"
+                                       name="stock" required min="1" max="9999"
+                                       th:value="${bookForm != null ? bookForm.stock : '1'}"
                                        placeholder="Enter stock quantity">
+                                <div class="invalid-feedback">
+                                    Stock must be at least 1.
+                                </div>
                             </div>
 
                             <!-- Publisher -->
@@ -100,7 +115,7 @@
                                     Publisher
                                 </label>
                                 <input type="text" class="form-control" id="publisher" 
-                                       name="publisher"
+                                       name="publisher" maxlength="255"
                                        th:value="${bookForm != null ? bookForm.publisher : ''}"
                                        placeholder="Enter publisher name (optional)">
                             </div>
@@ -142,5 +157,38 @@
             </div>
         </div>
     </div>
+
+    <script th:inline="javascript">
+        document.addEventListener('DOMContentLoaded', function() {
+            // Auto-open modal jika ada error dari server
+            const addModalOpen = /*[[${addBookModalOpen}]]*/ false;
+            if (addModalOpen) {
+                console.log('Auto-opening add modal due to error');
+                const modal = new bootstrap.Modal(document.getElementById('addBookModal'));
+                modal.show();
+            }
+
+            // Form validation
+            const form = document.getElementById('addBookForm');
+            if (form) {
+                form.addEventListener('submit', function (event) {
+                    if (!form.checkValidity()) {
+                        event.preventDefault();
+                        event.stopPropagation();
+                    }
+                    form.classList.add('was-validated');
+                }, false);
+            }
+
+            // Reset form ketika modal ditutup
+            const addModal = document.getElementById('addBookModal');
+            if (addModal) {
+                addModal.addEventListener('hidden.bs.modal', function () {
+                    form.reset();
+                    form.classList.remove('was-validated');
+                });
+            }
+        });
+    </script>
 </body>
 </html>

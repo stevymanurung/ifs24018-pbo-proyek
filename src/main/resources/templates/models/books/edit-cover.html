@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <body>
-    <div th:fragment="editCoverModal" class="modal fade" id="editCoverModal" tabindex="-1">
-        <div class="modal-dialog">
+    <div th:fragment="editCoverModal" class="modal fade" id="editCoverModal" tabindex="-1" data-bs-backdrop="static">
+        <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header bg-gradient-primary text-white">
                     <h5 class="modal-title">
@@ -15,41 +15,63 @@
                 <form th:action="@{/books/edit-cover}" method="post" 
                       th:object="${coverBookForm}" 
                       enctype="multipart/form-data" 
-                      data-loading="true">
+                      id="editCoverForm">
                     
                     <input type="hidden" th:field="*{id}">
                     
                     <div class="modal-body">
+                        <!-- Current Cover Preview (if exists) -->
+                        <div th:if="${book != null and book.cover != null}" class="mb-3">
+                            <label class="form-label fw-semibold">Current Cover:</label>
+                            <div class="text-center border rounded p-3 bg-light">
+                                <img th:src="@{'/books/cover/' + ${book.cover}}" 
+                                     alt="Current cover" 
+                                     style="max-width: 100%; max-height: 200px; border-radius: 4px;">
+                            </div>
+                        </div>
+
                         <!-- File Input -->
                         <div class="mb-3">
                             <label for="coverFile" class="form-label fw-semibold">
                                 <i class="bi bi-file-image me-1"></i>
-                                Select Image File <span class="text-danger">*</span>
+                                Select New Image File <span class="text-danger">*</span>
                             </label>
                             <input type="file" class="form-control" id="coverFile" 
                                    name="coverFile" 
                                    accept="image/jpeg,image/png,image/gif,image/webp"
                                    required
-                                   onchange="previewImage(this)">
+                                   onchange="previewCoverImage(this)">
                             <small class="form-text text-muted">
+                                <i class="bi bi-info-circle me-1"></i>
                                 Supported formats: JPG, PNG, GIF, WEBP (Max 5MB)
                             </small>
                         </div>
 
                         <!-- Image Preview -->
-                        <div id="imagePreviewContainer" class="text-center d-none">
-                            <label class="form-label fw-semibold">Preview:</label>
-                            <div class="border rounded p-2">
-                                <img id="imagePreview" src="" alt="Preview" 
-                                     style="max-width: 100%; max-height: 300px; border-radius: 4px;">
+                        <div id="coverImagePreviewContainer" class="d-none">
+                            <label class="form-label fw-semibold">
+                                <i class="bi bi-eye me-1"></i>
+                                Preview:
+                            </label>
+                            <div class="text-center border rounded p-3 bg-light">
+                                <img id="coverImagePreview" src="" alt="Preview" 
+                                     style="max-width: 100%; max-height: 400px; border-radius: 4px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                            </div>
+                            <div class="text-center mt-2">
+                                <small class="text-muted" id="imageFileInfo"></small>
                             </div>
                         </div>
 
                         <div class="alert alert-info mt-3 mb-0">
-                            <i class="bi bi-info-circle me-2"></i>
+                            <i class="bi bi-lightbulb me-2"></i>
                             <small>
-                                <strong>Tips:</strong> Use high-quality images with a 2:3 aspect ratio 
-                                (e.g., 400x600px) for best results.
+                                <strong>Tips for Best Results:</strong>
+                                <ul class="mb-0 mt-2">
+                                    <li>Use high-quality images with good resolution</li>
+                                    <li>Recommended aspect ratio: 2:3 (e.g., 400x600px or 600x900px)</li>
+                                    <li>Avoid blurry or low-resolution images</li>
+                                    <li>Center the main subject in the image</li>
+                                </ul>
                             </small>
                         </div>
                     </div>
@@ -59,10 +81,10 @@
                             <i class="bi bi-x-lg me-2"></i>
                             Cancel
                         </button>
-                        <button type="submit" class="btn btn-primary" id="uploadBtn" disabled>
-                            <span class="loading-spinner spinner-border spinner-border-sm me-2" role="status"></span>
-                            <i class="bi bi-upload me-2"></i>
-                            Upload Cover
+                        <button type="submit" class="btn btn-primary" id="uploadCoverBtn" disabled>
+                            <span class="spinner-border spinner-border-sm me-2 d-none" role="status" id="uploadSpinner"></span>
+                            <i class="bi bi-upload me-2" id="uploadIcon"></i>
+                            <span id="uploadBtnText">Upload Cover</span>
                         </button>
                     </div>
                 </form>
@@ -71,15 +93,18 @@
     </div>
 
     <script>
-        function previewImage(input) {
-            const preview = document.getElementById('imagePreview');
-            const previewContainer = document.getElementById('imagePreviewContainer');
-            const uploadBtn = document.getElementById('uploadBtn');
+        function previewCoverImage(input) {
+            const preview = document.getElementById('coverImagePreview');
+            const previewContainer = document.getElementById('coverImagePreviewContainer');
+            const uploadBtn = document.getElementById('uploadCoverBtn');
+            const fileInfo = document.getElementById('imageFileInfo');
 
             if (input.files && input.files[0]) {
+                const file = input.files[0];
+                
                 // Validate file size (5MB = 5 * 1024 * 1024 bytes)
-                if (input.files[0].size > 5 * 1024 * 1024) {
-                    alert('File size exceeds 5MB. Please choose a smaller file.');
+                if (file.size > 5 * 1024 * 1024) {
+                    alert('⚠️ File size exceeds 5MB. Please choose a smaller file.');
                     input.value = '';
                     previewContainer.classList.add('d-none');
                     uploadBtn.disabled = true;
@@ -88,13 +113,17 @@
 
                 // Validate file type
                 const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
-                if (!validTypes.includes(input.files[0].type)) {
-                    alert('Invalid file type. Please use JPG, PNG, GIF, or WEBP.');
+                if (!validTypes.includes(file.type)) {
+                    alert('⚠️ Invalid file type. Please use JPG, PNG, GIF, or WEBP.');
                     input.value = '';
                     previewContainer.classList.add('d-none');
                     uploadBtn.disabled = true;
                     return;
                 }
+
+                // Display file info
+                const fileSizeMB = (file.size / (1024 * 1024)).toFixed(2);
+                fileInfo.innerHTML = `<i class="bi bi-file-earmark-image me-1"></i> ${file.name} (${fileSizeMB} MB)`;
 
                 // Show preview
                 const reader = new FileReader();
@@ -102,19 +131,60 @@
                     preview.src = e.target.result;
                     previewContainer.classList.remove('d-none');
                     uploadBtn.disabled = false;
+                    
+                    // Smooth scroll to preview
+                    setTimeout(() => {
+                        previewContainer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                    }, 100);
                 };
-                reader.readAsDataURL(input.files[0]);
+                reader.readAsDataURL(file);
             } else {
                 previewContainer.classList.add('d-none');
                 uploadBtn.disabled = true;
             }
         }
 
+        // Handle form submission
+        document.getElementById('editCoverForm').addEventListener('submit', function(e) {
+            const uploadBtn = document.getElementById('uploadCoverBtn');
+            const uploadSpinner = document.getElementById('uploadSpinner');
+            const uploadIcon = document.getElementById('uploadIcon');
+            const uploadBtnText = document.getElementById('uploadBtnText');
+            
+            // Disable button and show loading
+            uploadBtn.disabled = true;
+            uploadSpinner.classList.remove('d-none');
+            uploadIcon.classList.add('d-none');
+            uploadBtnText.textContent = 'Uploading...';
+        });
+
         // Reset modal when closed
         document.getElementById('editCoverModal').addEventListener('hidden.bs.modal', function () {
-            document.getElementById('coverFile').value = '';
-            document.getElementById('imagePreviewContainer').classList.add('d-none');
-            document.getElementById('uploadBtn').disabled = true;
+            const form = document.getElementById('editCoverForm');
+            const input = document.getElementById('coverFile');
+            const previewContainer = document.getElementById('coverImagePreviewContainer');
+            const uploadBtn = document.getElementById('uploadCoverBtn');
+            const uploadSpinner = document.getElementById('uploadSpinner');
+            const uploadIcon = document.getElementById('uploadIcon');
+            const uploadBtnText = document.getElementById('uploadBtnText');
+            
+            // Reset form
+            input.value = '';
+            previewContainer.classList.add('d-none');
+            uploadBtn.disabled = true;
+            
+            // Reset button state
+            uploadSpinner.classList.add('d-none');
+            uploadIcon.classList.remove('d-none');
+            uploadBtnText.textContent = 'Upload Cover';
+            uploadBtn.disabled = false;
+            
+            form.classList.remove('was-validated');
+        });
+
+        // Focus on file input when modal opens
+        document.getElementById('editCoverModal').addEventListener('shown.bs.modal', function () {
+            document.getElementById('coverFile').focus();
         });
     </script>
 </body>

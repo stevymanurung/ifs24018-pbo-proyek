@@ -4,6 +4,8 @@
       layout:decorate="~{layouts/base}">
 <head>
     <title>Home - Library Admin</title>
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 </head>
 <body>
     <main layout:fragment="content">
@@ -167,24 +169,33 @@
                                     </td>
                                     <td class="text-center">
                                         <div class="btn-group btn-group-sm">
+                                            <!-- View Button -->
                                             <a th:href="@{'/books/' + ${book.id}}" 
                                                class="btn btn-outline-primary"
                                                title="View Details">
                                                 <i class="bi bi-eye"></i>
                                             </a>
-                                            <!-- PERBAIKAN: Tombol Edit diperbaiki -->
+                                            <!-- Edit Button -->
                                             <button type="button" 
                                                     class="btn btn-outline-warning"
-                                                    th:data-id="${book.id}"
-                                                    onclick="openEditModal(this.getAttribute('data-id'))"
+                                                    th:attr="data-id=${book.id},
+                                                             data-title=${book.title},
+                                                             data-author=${book.author},
+                                                             data-isbn=${book.isbn},
+                                                             data-category=${book.category},
+                                                             data-publisher=${book.publisher},
+                                                             data-year=${book.publicationYear},
+                                                             data-stock=${book.stock}"
+                                                    onclick="openEditModal(this)"
                                                     title="Edit">
                                                 <i class="bi bi-pencil"></i>
                                             </button>
+                                            <!-- Delete Button -->
                                             <button type="button" 
                                                     class="btn btn-outline-danger"
-                                                    th:data-id="${book.id}"
-                                                    th:data-title="${book.title}"
-                                                    onclick="openDeleteModal(this.getAttribute('data-id'), this.getAttribute('data-title'))"
+                                                    th:attr="data-id=${book.id},
+                                                             data-title=${book.title}"
+                                                    onclick="openDeleteModal(this)"
                                                     title="Delete">
                                                 <i class="bi bi-trash"></i>
                                             </button>
@@ -206,7 +217,7 @@
                                 <i class="bi bi-pie-chart me-2"></i>
                                 Books by Category
                             </h5>
-                            <canvas id="categoryChart"></canvas>
+                            <canvas id="categoryChart" style="max-height: 300px;"></canvas>
                         </div>
                     </div>
                 </div>
@@ -217,34 +228,56 @@
                                 <i class="bi bi-bar-chart me-2"></i>
                                 Stock Overview (Top 10)
                             </h5>
-                            <canvas id="stockChart"></canvas>
+                            <canvas id="stockChart" style="max-height: 300px;"></canvas>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Modals (Menggunakan path 'models' sesuai struktur folder Anda) -->
+        <!-- Include Modals -->
         <div th:replace="~{models/books/add :: addBookModal}"></div>
         <div th:replace="~{models/books/edit :: editBookModal}"></div>
         <div th:replace="~{models/books/delete :: deleteBookModal}"></div>
     </main>
 
     <th:block layout:fragment="scripts">
-        <script th:inline="javascript">
+        <script>
             /*<![CDATA[*/
-            const books = /*[[${books}]]*/ [];
+            // ============================================================================
+            // DATA FROM SERVER
+            // ============================================================================
+            const booksData = /*[[${books}]]*/ [];
+            const editBookModalOpen = /*[[${editBookModalOpen}]]*/ false;
+            const editBookModalId = /*[[${editBookModalId}]]*/ null;
+            const deleteBookModalOpen = /*[[${deleteBookModalOpen}]]*/ false;
+            const deleteBookModalId = /*[[${deleteBookModalId}]]*/ null;
             
+            console.log('📚 Books Data:', booksData);
+            console.log('✏️ Edit Modal:', editBookModalOpen, editBookModalId);
+            console.log('🗑️ Delete Modal:', deleteBookModalOpen, deleteBookModalId);
+            
+            // ============================================================================
+            // MAIN INITIALIZATION
+            // ============================================================================
             document.addEventListener('DOMContentLoaded', function() {
-                // Initialize charts if books exist
-                if (books && books.length > 0) {
+                // Initialize charts
+                if (booksData && booksData.length > 0) {
+                    console.log('📊 Initializing charts...');
                     initializeCharts();
                 }
 
-                // Setup delete confirmation validation
-                setupDeleteConfirmation();
+                // Show toast messages
+                handleToastMessages();
 
-                // Show success/error toast messages
+                // Handle auto-open modals from detail page
+                handleAutoOpenModals();
+            });
+
+            // ============================================================================
+            // TOAST MESSAGES
+            // ============================================================================
+            function handleToastMessages() {
                 const successMsg = /*[[${success}]]*/ null;
                 const errorMsg = /*[[${error}]]*/ null;
                 
@@ -252,108 +285,155 @@
                     showToast('success', successMsg);
                 }
                 if (errorMsg) {
-                    // Logic ini untuk memastikan toast error muncul jika bukan error dari modal form
-                    // Tapi jika error dari form modal (seperti validasi), modal biasanya dirender ulang oleh controller
                     showToast('error', errorMsg);
+                }
+            }
+
+            // ============================================================================
+            // AUTO-OPEN MODALS (dari detail page via query parameters)
+            // ============================================================================
+            function handleAutoOpenModals() {
+                // Auto-open Edit modal
+                if (editBookModalOpen && editBookModalId) {
+                    console.log('🔓 Auto-opening edit modal for book ID:', editBookModalId);
+                    const book = booksData.find(b => b.id == editBookModalId);
+                    if (book) {
+                        const fakeButton = createFakeButtonForEdit(book);
+                        openEditModal(fakeButton);
+                    }
+                }
+
+                // Auto-open Delete modal
+                if (deleteBookModalOpen && deleteBookModalId) {
+                    console.log('🔓 Auto-opening delete modal for book ID:', deleteBookModalId);
+                    const book = booksData.find(b => b.id == deleteBookModalId);
+                    if (book) {
+                        const fakeButton = createFakeButtonForDelete(book);
+                        openDeleteModal(fakeButton);
+                    }
+                }
+            }
+
+            function createFakeButtonForEdit(book) {
+                const btn = document.createElement('button');
+                btn.setAttribute('data-id', book.id);
+                btn.setAttribute('data-title', book.title);
+                btn.setAttribute('data-author', book.author);
+                btn.setAttribute('data-isbn', book.isbn);
+                btn.setAttribute('data-category', book.category);
+                btn.setAttribute('data-publisher', book.publisher || '');
+                btn.setAttribute('data-year', book.publicationYear || '');
+                btn.setAttribute('data-stock', book.stock);
+                return btn;
+            }
+
+            function createFakeButtonForDelete(book) {
+                const btn = document.createElement('button');
+                btn.setAttribute('data-id', book.id);
+                btn.setAttribute('data-title', book.title);
+                return btn;
+            }
+
+            // ============================================================================
+            // OPEN EDIT MODAL
+            // ============================================================================
+            function openEditModal(button) {
+                console.log("✏️ Opening edit modal");
+                
+                try {
+                    const bookId = button.getAttribute('data-id');
+                    const title = button.getAttribute('data-title') || '';
+                    const author = button.getAttribute('data-author') || '';
+                    const isbn = button.getAttribute('data-isbn') || '';
+                    const category = button.getAttribute('data-category') || '';
+                    const publisher = button.getAttribute('data-publisher') || '';
+                    const year = button.getAttribute('data-year') || '';
+                    const stock = button.getAttribute('data-stock') || '';
                     
-                    // Jika ada error dari server saat submit add/edit, 
-                    // controller Anda harus mengirim flag 'addBookModalOpen' dsb.
-                    if (/*[[${addBookModalOpen}]]*/ false) {
-                        new bootstrap.Modal(document.getElementById('addBookModal')).show();
+                    console.log('📖 Book data:', { bookId, title, author, isbn });
+                    
+                    // Populate form
+                    document.getElementById('editBookId').value = bookId;
+                    document.getElementById('editTitle').value = title;
+                    document.getElementById('editAuthor').value = author;
+                    document.getElementById('editIsbn').value = isbn;
+                    document.getElementById('editCategory').value = category;
+                    document.getElementById('editPublisher').value = publisher;
+                    document.getElementById('editPublicationYear').value = year;
+                    document.getElementById('editStock').value = stock;
+                    
+                    // Set form action
+                    const form = document.getElementById('editBookForm');
+                    if (form) {
+                        form.action = '/books/edit/' + bookId;
+                        console.log('✅ Form action:', form.action);
                     }
-                    if (/*[[${editBookModalOpen}]]*/ false) {
-                         // Perlu logic khusus jika ingin membuka modal edit otomatis saat error server
-                        const bookId = /*[[${editBookModalId}]]*/ null;
-                        if(bookId) openEditModal(bookId); 
+
+                    // Show modal
+                    const modalEl = document.getElementById('editBookModal');
+                    if (modalEl) {
+                        const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+                        modal.show();
                     }
-                }
-            });
-
-            function setupDeleteConfirmation() {
-                const confirmInput = document.getElementById('deleteConfirmTitle');
-                const deleteBtn = document.getElementById('confirmDeleteBtn');
-                const titleDisplay = document.getElementById('deleteBookTitleDisplay');
-                
-                if (confirmInput && deleteBtn && titleDisplay) {
-                    confirmInput.addEventListener('input', function() {
-                        const inputValue = this.value.trim();
-                        const expectedTitle = titleDisplay.textContent.trim();
-                        deleteBtn.disabled = inputValue !== expectedTitle;
-                    });
+                } catch (error) {
+                    console.error('❌ Error opening edit modal:', error);
+                    showToast('error', 'Failed to open edit modal: ' + error.message);
                 }
             }
 
-            // PERBAIKAN: Fungsi Edit yang lebih aman
-            function openEditModal(bookId) {
-                console.log("Opening edit modal for ID:", bookId);
+            // ============================================================================
+            // OPEN DELETE MODAL
+            // ============================================================================
+            function openDeleteModal(button) {
+                console.log('🗑️ Opening delete modal');
                 
-                if (!books || books.length === 0) {
-                    console.error("No books data found");
-                    return;
-                }
+                try {
+                    const bookId = button.getAttribute('data-id');
+                    const bookTitle = button.getAttribute('data-title');
+                    
+                    console.log('📖 Deleting:', bookId, bookTitle);
+                    
+                    // Set values
+                    document.getElementById('deleteBookId').value = bookId;
+                    document.getElementById('deleteBookTitleDisplay').textContent = bookTitle;
+                    
+                    const confirmInput = document.getElementById('deleteConfirmTitle');
+                    if (confirmInput) {
+                        confirmInput.placeholder = 'Type: ' + bookTitle;
+                        confirmInput.value = '';
+                        confirmInput.classList.remove('is-valid', 'is-invalid');
+                    }
+                    
+                    // Set form action
+                    // const form = document.getElementById('deleteBookForm');
+                    // if (form) {
+                    //     form.action = '/books/delete/' + bookId;
+                    //     console.log('✅ Form action:', form.action);
+                    // }
+                    
+                    // Disable delete button
+                    // const deleteBtn = document.getElementById('confirmDeleteBtn');
 
-                // Gunakan toString() untuk perbandingan yang aman (angka vs string)
-                const book = books.find(b => b.id.toString() === bookId.toString());
-                
-                if (!book) {
-                    console.error("Book not found for ID:", bookId);
-                    return;
-                }
-
-                // Populate form fields
-                document.getElementById('editBookId').value = book.id;
-                document.getElementById('editTitle').value = book.title;
-                document.getElementById('editAuthor').value = book.author;
-                document.getElementById('editIsbn').value = book.isbn;
-                document.getElementById('editCategory').value = book.category;
-                document.getElementById('editPublisher').value = book.publisher || '';
-                document.getElementById('editPublicationYear').value = book.publicationYear || '';
-                document.getElementById('editStock').value = book.stock;
-                
-                // Update form action URL
-                const form = document.getElementById('editBookForm');
-                if (form) {
-                    form.action = '/books/edit/' + book.id;
-                }
-
-                // Show modal menggunakan getOrCreateInstance
-                const modalEl = document.getElementById('editBookModal');
-                if (modalEl) {
-                    const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
-                    modal.show();
+                    // if (deleteBtn) {
+                    //     deleteBtn.disabled = true;
+                    // }
+                    
+                    // Show modal
+                    const modalEl = document.getElementById('deleteBookModal');
+                    if (modalEl) {
+                        const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+                        modal.show();
+                    }
+                } catch (error) {
+                    console.error('❌ Error opening delete modal:', error);
+                    showToast('error', 'Failed to open delete modal: ' + error.message);
                 }
             }
 
-            function openDeleteModal(bookId, bookTitle) {
-                // Set values
-                document.getElementById('deleteBookId').value = bookId;
-                document.getElementById('deleteBookTitleDisplay').textContent = bookTitle;
-                const confirmInput = document.getElementById('deleteConfirmTitle');
-                confirmInput.placeholder = 'Type: ' + bookTitle;
-                confirmInput.value = '';
-                
-                // Update form action URL
-                const form = document.getElementById('deleteBookForm');
-                if (form) {
-                    form.action = '/books/delete/' + bookId;
-                }
-                
-                // Reset and disable delete button
-                const deleteBtn = document.getElementById('confirmDeleteBtn');
-                if (deleteBtn) {
-                    deleteBtn.disabled = true;
-                }
-                
-                // Show modal
-                const modalEl = document.getElementById('deleteBookModal');
-                if (modalEl) {
-                    const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
-                    modal.show();
-                }
-            }
-
+            // ============================================================================
+            // TOAST NOTIFICATION
+            // ============================================================================
             function showToast(type, message) {
-                // Create toast container if not exists
                 let toastContainer = document.querySelector('.toast-container');
                 if (!toastContainer) {
                     toastContainer = document.createElement('div');
@@ -362,7 +442,6 @@
                     document.body.appendChild(toastContainer);
                 }
 
-                // Create toast
                 const toastId = 'toast-' + Date.now();
                 const bgClass = type === 'success' ? 'bg-success' : 'bg-danger';
                 const icon = type === 'success' ? 'check-circle-fill' : 'exclamation-triangle-fill';
@@ -385,22 +464,42 @@
                 const toast = new bootstrap.Toast(toastElement, { delay: 3000 });
                 toast.show();
                 
-                // Remove toast after hidden
                 toastElement.addEventListener('hidden.bs.toast', function() {
                     toastElement.remove();
                 });
             }
 
+            // ============================================================================
+            // INITIALIZE CHARTS
+            // ============================================================================
             function initializeCharts() {
-                // Category Distribution Chart
+                try {
+                    if (typeof Chart === 'undefined') {
+                        console.error('❌ Chart.js not loaded!');
+                        return;
+                    }
+
+                    // Category Chart
+                    initializeCategoryChart();
+                    
+                    // Stock Chart
+                    initializeStockChart();
+                    
+                } catch (error) {
+                    console.error('❌ Error initializing charts:', error);
+                }
+            }
+
+            function initializeCategoryChart() {
                 const categoryData = {};
-                books.forEach(book => {
-                    categoryData[book.category] = (categoryData[book.category] || 0) + 1;
+                booksData.forEach(book => {
+                    const category = book.category || 'Uncategorized';
+                    categoryData[category] = (categoryData[category] || 0) + 1;
                 });
 
-                const categoryChart = document.getElementById('categoryChart');
-                if (categoryChart) {
-                    new Chart(categoryChart, {
+                const canvas = document.getElementById('categoryChart');
+                if (canvas) {
+                    new Chart(canvas.getContext('2d'), {
                         type: 'doughnut',
                         data: {
                             labels: Object.keys(categoryData),
@@ -409,53 +508,82 @@
                                 backgroundColor: [
                                     '#4f46e5', '#f59e0b', '#10b981', '#ef4444', 
                                     '#8b5cf6', '#ec4899', '#06b6d4', '#f97316'
-                                ]
+                                ],
+                                borderWidth: 2,
+                                borderColor: '#fff'
                             }]
                         },
                         options: {
                             responsive: true,
+                            maintainAspectRatio: true,
                             plugins: {
-                                legend: { position: 'bottom' }
+                                legend: { 
+                                    position: 'bottom',
+                                    labels: { padding: 15, font: { size: 12 } }
+                                },
+                                tooltip: {
+                                    callbacks: {
+                                        label: ctx => ctx.label + ': ' + ctx.parsed + ' books'
+                                    }
+                                }
                             }
                         }
                     });
+                    console.log('✅ Category chart initialized');
                 }
+            }
 
-                // Top 10 Stock Chart
-                const sortedBooks = [...books].sort((a, b) => b.stock - a.stock).slice(0, 10);
-                const stockLabels = sortedBooks.map(b => b.title.length > 20 ? b.title.substring(0, 20) + '...' : b.title);
-                const stockData = sortedBooks.map(b => b.stock);
-                const availableData = sortedBooks.map(b => b.availableStock);
+            function initializeStockChart() {
+                const sortedBooks = [...booksData].sort((a, b) => b.stock - a.stock).slice(0, 10);
+                const labels = sortedBooks.map(b => {
+                    const title = b.title || 'Untitled';
+                    return title.length > 20 ? title.substring(0, 20) + '...' : title;
+                });
+                const stockData = sortedBooks.map(b => b.stock || 0);
+                const availableData = sortedBooks.map(b => b.availableStock || 0);
 
-                const stockChart = document.getElementById('stockChart');
-                if (stockChart) {
-                    new Chart(stockChart, {
+                const canvas = document.getElementById('stockChart');
+                if (canvas) {
+                    new Chart(canvas.getContext('2d'), {
                         type: 'bar',
                         data: {
-                            labels: stockLabels,
+                            labels: labels,
                             datasets: [
                                 {
                                     label: 'Total Stock',
                                     data: stockData,
-                                    backgroundColor: '#4f46e5'
+                                    backgroundColor: '#4f46e5',
+                                    borderRadius: 5
                                 },
                                 {
                                     label: 'Available',
                                     data: availableData,
-                                    backgroundColor: '#10b981'
+                                    backgroundColor: '#10b981',
+                                    borderRadius: 5
                                 }
                             ]
                         },
                         options: {
                             responsive: true,
+                            maintainAspectRatio: true,
                             scales: {
-                                y: { beginAtZero: true }
+                                y: { beginAtZero: true, ticks: { stepSize: 1 } },
+                                x: { ticks: { maxRotation: 45, minRotation: 45 } }
                             },
                             plugins: {
-                                legend: { position: 'bottom' }
+                                legend: { 
+                                    position: 'bottom',
+                                    labels: { padding: 15, font: { size: 12 } }
+                                },
+                                tooltip: {
+                                    callbacks: {
+                                        label: ctx => ctx.dataset.label + ': ' + ctx.parsed.y + ' books'
+                                    }
+                                }
                             }
                         }
                     });
+                    console.log('✅ Stock chart initialized');
                 }
             }
             /*]]>*/

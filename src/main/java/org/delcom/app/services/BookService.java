@@ -18,7 +18,7 @@ public class BookService {
         this.bookRepository = bookRepository;
         this.fileStorageService = fileStorageService;
     }
-
+    
     @Transactional
     public Book createBook(UUID userId, String title, String author, String isbn, 
                           String category, String publisher, Integer publicationYear, Integer stock) {
