@@ -13,6 +13,12 @@
     
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+     <link
+      rel="stylesheet"
+      th:href="@{/assets/vendor/sweetalert2/dist/sweetalert2.min.css}"
+    />
+
     
     <!-- Custom CSS -->
     <style>
@@ -226,7 +232,38 @@
     <!-- jQuery -->
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     
+    <!-- SweetAlert2 -->
+    <script
+      th:src="@{/assets/vendor/sweetalert2/dist/sweetalert2.all.min.js}"
+    ></script>
+
     <!-- Global JavaScript -->
+     <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        /* Ambil pesan sukses dari thymeleaf */
+        const successMessage = "[[${success}]]";
+        if (successMessage && successMessage.length > 5) {
+          Swal.fire({
+            icon: "success",
+            title: "Berhasil Melakukan Tindakan",
+            text: successMessage,
+            showConfirmButton: true,
+          });
+        }
+
+        /* Ambil pesan error dari thymeleaf */
+        const errorMessage = "[[${error}]]";
+        if (errorMessage && errorMessage.length > 5) {
+          Swal.fire({
+            icon: "error",
+            title: "Gagal Melakukan Tindakan",
+            text: errorMessage,
+            showConfirmButton: true,
+          });
+        }
+      });
+    </script>
+
     <script>
         // Auto-dismiss alerts after 5 seconds
         setTimeout(function() {

@@ -402,21 +402,30 @@
                         confirmInput.placeholder = 'Type: ' + bookTitle;
                         confirmInput.value = '';
                         confirmInput.classList.remove('is-valid', 'is-invalid');
+
+                        confirmInput.addEventListener('input', function() {
+                            const deleteBtn = document.getElementById('confirmDeleteBtn');
+                            if (this.value === bookTitle) {
+                                this.classList.add('is-valid');
+                                this.classList.remove('is-invalid');
+                                if (deleteBtn) deleteBtn.disabled = false;
+                            } else {
+                                this.classList.add('is-invalid');
+                                this.classList.remove('is-valid');
+                                if (deleteBtn) deleteBtn.disabled = true;
+                            }
+                        });
+                    }
+
+                    if(!confirmInput){
+                        return;
                     }
                     
-                    // Set form action
-                    // const form = document.getElementById('deleteBookForm');
-                    // if (form) {
-                    //     form.action = '/books/delete/' + bookId;
-                    //     console.log('✅ Form action:', form.action);
-                    // }
-                    
                     // Disable delete button
-                    // const deleteBtn = document.getElementById('confirmDeleteBtn');
-
-                    // if (deleteBtn) {
-                    //     deleteBtn.disabled = true;
-                    // }
+                    const deleteBtn = document.getElementById('confirmDeleteBtn');
+                    if (deleteBtn) {
+                        deleteBtn.disabled = true;
+                    }
                     
                     // Show modal
                     const modalEl = document.getElementById('deleteBookModal');

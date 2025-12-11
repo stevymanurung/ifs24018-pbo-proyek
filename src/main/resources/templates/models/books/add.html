@@ -1,194 +1,141 @@
-<!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
-<body>
-    <div th:fragment="addBookModal" class="modal fade" id="addBookModal" tabindex="-1" data-bs-backdrop="static">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header bg-gradient-primary text-white">
-                    <h5 class="modal-title">
-                        <i class="bi bi-plus-circle me-2"></i>
-                        Add New Book
-                    </h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+<!-- Modal Add Book -->
+<div th:fragment="addBookModal" class="modal fade" id="addBookModal" tabindex="-1" data-bs-backdrop="static">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-gradient-primary text-white">
+                <h5 class="modal-title">
+                    <i class="bi bi-plus-circle me-2"></i>
+                    Add New Book
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            
+            <form th:action="@{/books/add}" method="post" th:object="${bookForm}" id="addBookForm">
+                <div class="modal-body">
+                    <!-- Title -->
+                    <div class="mb-3">
+                        <label for="addBookTitle" class="form-label fw-semibold">
+                            <i class="bi bi-fonts me-1"></i>
+                            Title <span class="text-danger">*</span>
+                        </label>
+                        <input id="addBookTitle" type="text" class="form-control" 
+                               th:field="*{title}" required maxlength="255"
+                               placeholder="Enter book title">
+                        <div class="invalid-feedback">
+                            Please provide a book title.
+                        </div>
+                        <div class="text-danger" th:if="${#fields.hasErrors('title')}" th:errors="*{title}"></div>
+                    </div>
+
+                    <!-- Author -->
+                    <div class="mb-3">
+                        <label for="addBookAuthor" class="form-label fw-semibold">
+                            <i class="bi bi-person me-1"></i>
+                            Author <span class="text-danger">*</span>
+                        </label>
+                        <input id="addBookAuthor" type="text" class="form-control" 
+                               th:field="*{author}" required maxlength="255"
+                               placeholder="Enter author name">
+                        <div class="invalid-feedback">
+                            Please provide an author name.
+                        </div>
+                        <div class="text-danger" th:if="${#fields.hasErrors('author')}" th:errors="*{author}"></div>
+                    </div>
+
+                    <!-- ISBN -->
+                    <div class="mb-3">
+                        <label for="addBookIsbn" class="form-label fw-semibold">
+                            <i class="bi bi-upc-scan me-1"></i>
+                            ISBN <span class="text-danger">*</span>
+                        </label>
+                        <input id="addBookIsbn" type="text" class="form-control" 
+                               th:field="*{isbn}" required maxlength="20"
+                               placeholder="978-xxx-xxxx-xx-x">
+                        <div class="invalid-feedback">
+                            Please provide a valid ISBN.
+                        </div>
+                        <div class="text-danger" th:if="${#fields.hasErrors('isbn')}" th:errors="*{isbn}"></div>
+                    </div>
+
+                    <!-- Category -->
+                    <div class="mb-3">
+                        <label for="addBookCategory" class="form-label fw-semibold">
+                            <i class="bi bi-tag me-1"></i>
+                            Category <span class="text-danger">*</span>
+                        </label>
+                        <select id="addBookCategory" class="form-select" th:field="*{category}" required>
+                            <option value="">Select category...</option>
+                            <option value="Fiction">Fiction</option>
+                            <option value="Non-Fiction">Non-Fiction</option>
+                            <option value="Science">Science</option>
+                            <option value="Technology">Technology</option>
+                            <option value="History">History</option>
+                            <option value="Biography">Biography</option>
+                            <option value="Education">Education</option>
+                            <option value="Children">Children</option>
+                            <option value="Comics">Comics</option>
+                            <option value="Religion">Religion</option>
+                            <option value="Art">Art</option>
+                            <option value="Other">Other</option>
+                        </select>
+                        <div class="invalid-feedback">
+                            Please select a category.
+                        </div>
+                        <div class="text-danger" th:if="${#fields.hasErrors('category')}" th:errors="*{category}"></div>
+                    </div>
+
+                    <!-- Stock -->
+                    <div class="mb-3">
+                        <label for="addBookStock" class="form-label fw-semibold">
+                            <i class="bi bi-box-seam me-1"></i>
+                            Stock <span class="text-danger">*</span>
+                        </label>
+                        <input id="addBookStock" type="number" class="form-control" 
+                               th:field="*{stock}" required min="1" max="9999"
+                               placeholder="Enter stock quantity">
+                        <div class="invalid-feedback">
+                            Stock must be at least 1.
+                        </div>
+                        <div class="text-danger" th:if="${#fields.hasErrors('stock')}" th:errors="*{stock}"></div>
+                    </div>
+
+                    <!-- Publisher -->
+                    <div class="mb-3">
+                        <label for="addBookPublisher" class="form-label fw-semibold">
+                            <i class="bi bi-building me-1"></i>
+                            Publisher
+                        </label>
+                        <input id="addBookPublisher" type="text" class="form-control" 
+                               th:field="*{publisher}" maxlength="255"
+                               placeholder="Enter publisher name (optional)">
+                        <div class="text-danger" th:if="${#fields.hasErrors('publisher')}" th:errors="*{publisher}"></div>
+                    </div>
+
+                    <!-- Publication Year -->
+                    <div class="mb-3">
+                        <label for="addBookPublicationYear" class="form-label fw-semibold">
+                            <i class="bi bi-calendar me-1"></i>
+                            Publication Year
+                        </label>
+                        <input id="addBookPublicationYear" type="number" class="form-control" 
+                               th:field="*{publicationYear}"
+                               min="1000" max="2100"
+                               placeholder="YYYY (optional)">
+                        <div class="text-danger" th:if="${#fields.hasErrors('publicationYear')}" th:errors="*{publicationYear}"></div>
+                    </div>
                 </div>
                 
-                <form th:action="@{/books/add}" method="post" id="addBookForm">
-                    <div class="modal-body">
-                        <!-- Error Message -->
-                        <div th:if="${error != null and addBookModalOpen}" class="alert alert-danger alert-dismissible fade show" role="alert">
-                            <i class="bi bi-exclamation-triangle-fill me-2"></i>
-                            <span th:text="${error}"></span>
-                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                        </div>
-
-                        <div class="row">
-                            <!-- Title -->
-                            <div class="col-md-12 mb-3">
-                                <label for="title" class="form-label fw-semibold">
-                                    <i class="bi bi-fonts me-1"></i>
-                                    Title <span class="text-danger">*</span>
-                                </label>
-                                <input type="text" class="form-control" id="title" 
-                                       name="title" required maxlength="255"
-                                       th:value="${bookForm != null ? bookForm.title : ''}"
-                                       placeholder="Enter book title">
-                                <div class="invalid-feedback">
-                                    Please provide a book title.
-                                </div>
-                            </div>
-
-                            <!-- Author -->
-                            <div class="col-md-6 mb-3">
-                                <label for="author" class="form-label fw-semibold">
-                                    <i class="bi bi-person me-1"></i>
-                                    Author <span class="text-danger">*</span>
-                                </label>
-                                <input type="text" class="form-control" id="author" 
-                                       name="author" required maxlength="255"
-                                       th:value="${bookForm != null ? bookForm.author : ''}"
-                                       placeholder="Enter author name">
-                                <div class="invalid-feedback">
-                                    Please provide an author name.
-                                </div>
-                            </div>
-
-                            <!-- ISBN -->
-                            <div class="col-md-6 mb-3">
-                                <label for="isbn" class="form-label fw-semibold">
-                                    <i class="bi bi-upc-scan me-1"></i>
-                                    ISBN <span class="text-danger">*</span>
-                                </label>
-                                <input type="text" class="form-control" id="isbn" 
-                                       name="isbn" required maxlength="20"
-                                       th:value="${bookForm != null ? bookForm.isbn : ''}"
-                                       placeholder="978-xxx-xxxx-xx-x">
-                                <div class="invalid-feedback">
-                                    Please provide a valid ISBN.
-                                </div>
-                            </div>
-
-                            <!-- Category -->
-                            <div class="col-md-6 mb-3">
-                                <label for="category" class="form-label fw-semibold">
-                                    <i class="bi bi-tag me-1"></i>
-                                    Category <span class="text-danger">*</span>
-                                </label>
-                                <select class="form-select" id="category" name="category" required>
-                                    <option value="">Select category...</option>
-                                    <option value="Fiction" th:selected="${bookForm != null && bookForm.category == 'Fiction'}">Fiction</option>
-                                    <option value="Non-Fiction" th:selected="${bookForm != null && bookForm.category == 'Non-Fiction'}">Non-Fiction</option>
-                                    <option value="Science" th:selected="${bookForm != null && bookForm.category == 'Science'}">Science</option>
-                                    <option value="Technology" th:selected="${bookForm != null && bookForm.category == 'Technology'}">Technology</option>
-                                    <option value="History" th:selected="${bookForm != null && bookForm.category == 'History'}">History</option>
-                                    <option value="Biography" th:selected="${bookForm != null && bookForm.category == 'Biography'}">Biography</option>
-                                    <option value="Education" th:selected="${bookForm != null && bookForm.category == 'Education'}">Education</option>
-                                    <option value="Children" th:selected="${bookForm != null && bookForm.category == 'Children'}">Children</option>
-                                    <option value="Comics" th:selected="${bookForm != null && bookForm.category == 'Comics'}">Comics</option>
-                                    <option value="Religion" th:selected="${bookForm != null && bookForm.category == 'Religion'}">Religion</option>
-                                    <option value="Art" th:selected="${bookForm != null && bookForm.category == 'Art'}">Art</option>
-                                    <option value="Other" th:selected="${bookForm != null && bookForm.category == 'Other'}">Other</option>
-                                </select>
-                                <div class="invalid-feedback">
-                                    Please select a category.
-                                </div>
-                            </div>
-
-                            <!-- Stock -->
-                            <div class="col-md-6 mb-3">
-                                <label for="stock" class="form-label fw-semibold">
-                                    <i class="bi bi-box-seam me-1"></i>
-                                    Stock <span class="text-danger">*</span>
-                                </label>
-                                <input type="number" class="form-control" id="stock" 
-                                       name="stock" required min="1" max="9999"
-                                       th:value="${bookForm != null ? bookForm.stock : '1'}"
-                                       placeholder="Enter stock quantity">
-                                <div class="invalid-feedback">
-                                    Stock must be at least 1.
-                                </div>
-                            </div>
-
-                            <!-- Publisher -->
-                            <div class="col-md-6 mb-3">
-                                <label for="publisher" class="form-label fw-semibold">
-                                    <i class="bi bi-building me-1"></i>
-                                    Publisher
-                                </label>
-                                <input type="text" class="form-control" id="publisher" 
-                                       name="publisher" maxlength="255"
-                                       th:value="${bookForm != null ? bookForm.publisher : ''}"
-                                       placeholder="Enter publisher name (optional)">
-                            </div>
-
-                            <!-- Publication Year -->
-                            <div class="col-md-6 mb-3">
-                                <label for="publicationYear" class="form-label fw-semibold">
-                                    <i class="bi bi-calendar me-1"></i>
-                                    Publication Year
-                                </label>
-                                <input type="number" class="form-control" id="publicationYear" 
-                                       name="publicationYear"
-                                       min="1000" max="2100"
-                                       th:value="${bookForm != null ? bookForm.publicationYear : ''}"
-                                       placeholder="YYYY (optional)">
-                            </div>
-                        </div>
-
-                        <div class="alert alert-info mb-0">
-                            <i class="bi bi-info-circle me-2"></i>
-                            <small>
-                                Fields marked with <span class="text-danger fw-bold">*</span> are required.
-                                You can add book cover later from the detail page.
-                            </small>
-                        </div>
-                    </div>
-                    
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                            <i class="bi bi-x-lg me-2"></i>
-                            Cancel
-                        </button>
-                        <button type="submit" class="btn btn-primary">
-                            <i class="bi bi-check-lg me-2"></i>
-                            Add Book
-                        </button>
-                    </div>
-                </form>
-            </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="bi bi-x-lg me-2"></i>
+                        Cancel
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-save me-2"></i>
+                        Save Book
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
-
-    <script th:inline="javascript">
-        document.addEventListener('DOMContentLoaded', function() {
-            // Auto-open modal jika ada error dari server
-            const addModalOpen = /*[[${addBookModalOpen}]]*/ false;
-            if (addModalOpen) {
-                console.log('Auto-opening add modal due to error');
-                const modal = new bootstrap.Modal(document.getElementById('addBookModal'));
-                modal.show();
-            }
-
-            // Form validation
-            const form = document.getElementById('addBookForm');
-            if (form) {
-                form.addEventListener('submit', function (event) {
-                    if (!form.checkValidity()) {
-                        event.preventDefault();
-                        event.stopPropagation();
-                    }
-                    form.classList.add('was-validated');
-                }, false);
-            }
-
-            // Reset form ketika modal ditutup
-            const addModal = document.getElementById('addBookModal');
-            if (addModal) {
-                addModal.addEventListener('hidden.bs.modal', function () {
-                    form.reset();
-                    form.classList.remove('was-validated');
-                });
-            }
-        });
-    </script>
-</body>
-</html>
+</div>

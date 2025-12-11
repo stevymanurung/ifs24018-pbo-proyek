@@ -209,28 +209,13 @@ public class BookView {
             return "redirect:/";
         }
 
-        if (bookForm.getConfirmTitle() == null || bookForm.getConfirmTitle().isBlank()) {
-            redirectAttributes.addFlashAttribute("error", "Konfirmasi judul tidak boleh kosong");
-            redirectAttributes.addFlashAttribute("deleteBookModalOpen", true);
-            redirectAttributes.addFlashAttribute("deleteBookModalId", bookForm.getId());
-            return "redirect:/";
-        }
-
         // Periksa apakah buku tersedia
         Book existingBook = bookService.getBookById(authUser.getId(), bookForm.getId());
         if (existingBook == null) {
             redirectAttributes.addFlashAttribute("error", "Buku tidak ditemukan");
             return "redirect:/";
         }
-
-        // Validasi konfirmasi judul
-        if (!existingBook.getTitle().equals(bookForm.getConfirmTitle())) {
-            redirectAttributes.addFlashAttribute("error", "Konfirmasi judul tidak sesuai");
-            redirectAttributes.addFlashAttribute("deleteBookModalOpen", true);
-            redirectAttributes.addFlashAttribute("deleteBookModalId", bookForm.getId());
-            return "redirect:/";
-        }
-
+        
         // Hapus buku
         boolean deleted = bookService.deleteBook(authUser.getId(), bookForm.getId());
         if (!deleted) {
