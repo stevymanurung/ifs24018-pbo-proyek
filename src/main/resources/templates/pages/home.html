@@ -344,25 +344,36 @@
                     const bookId = button.getAttribute('data-id');
                     const title = button.getAttribute('data-title') || '';
                     const author = button.getAttribute('data-author') || '';
-                    const isbn = button.getAttribute('data-isbn') || '';
                     const category = button.getAttribute('data-category') || '';
                     const publisher = button.getAttribute('data-publisher') || '';
                     const year = button.getAttribute('data-year') || '';
                     const stock = button.getAttribute('data-stock') || '';
+                    const cover = button.getAttribute('data-cover') || '';
                     
-                    console.log('📖 Book data:', { bookId, title, author, isbn });
+                    console.log('📖 Book data:', { bookId, title, author, category });
                     
                     // Populate form
                     document.getElementById('editBookId').value = bookId;
                     document.getElementById('editTitle').value = title;
                     document.getElementById('editAuthor').value = author;
-                    document.getElementById('editIsbn').value = isbn;
                     document.getElementById('editCategory').value = category;
                     document.getElementById('editPublisher').value = publisher;
                     document.getElementById('editPublicationYear').value = year;
                     document.getElementById('editStock').value = stock;
                     
-                    // Set form action
+                    // Show current cover
+                    const editCoverPreview = document.getElementById('editCoverPreview');
+                    const editNoCoverMessage = document.getElementById('editNoCoverMessage');
+                    if (cover && cover !== 'null') {
+                        editCoverPreview.src = '/api/books/cover/' + cover;
+                        editCoverPreview.style.display = 'block';
+                        editNoCoverMessage.style.display = 'none';
+                    } else {
+                        editCoverPreview.style.display = 'none';
+                        editNoCoverMessage.style.display = 'block';
+                    }
+                    
+                    // Set form action - INI YANG DIPERBAIKI!
                     const form = document.getElementById('editBookForm');
                     if (form) {
                         form.action = '/books/edit/' + bookId;
@@ -380,7 +391,7 @@
                     showToast('error', 'Failed to open edit modal: ' + error.message);
                 }
             }
-
+                    
             // ============================================================================
             // OPEN DELETE MODAL
             // ============================================================================

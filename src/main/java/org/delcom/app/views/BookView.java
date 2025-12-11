@@ -121,78 +121,7 @@ public class BookView {
         }
     }
 
-    @PostMapping("/edit")
-    public String postEditBook(@Valid @ModelAttribute("bookForm") BookForm bookForm,
-            RedirectAttributes redirectAttributes) {
-        
-        User authUser = getAuthenticatedUser();
-        if (authUser == null) {
-            return "redirect:/auth/logout";
-        }
-
-        // Validasi form
-        if (bookForm.getId() == null) {
-            redirectAttributes.addFlashAttribute("error", "ID buku tidak valid");
-            return "redirect:/";
-        }
-
-        if (bookForm.getTitle() == null || bookForm.getTitle().isBlank()) {
-            redirectAttributes.addFlashAttribute("error", "Judul buku tidak boleh kosong");
-            redirectAttributes.addFlashAttribute("editBookModalOpen", true);
-            redirectAttributes.addFlashAttribute("editBookModalId", bookForm.getId());
-            return "redirect:/";
-        }
-
-        if (bookForm.getAuthor() == null || bookForm.getAuthor().isBlank()) {
-            redirectAttributes.addFlashAttribute("error", "Penulis tidak boleh kosong");
-            redirectAttributes.addFlashAttribute("editBookModalOpen", true);
-            redirectAttributes.addFlashAttribute("editBookModalId", bookForm.getId());
-            return "redirect:/";
-        }
-
-        if (bookForm.getIsbn() == null || bookForm.getIsbn().isBlank()) {
-            redirectAttributes.addFlashAttribute("error", "ISBN tidak boleh kosong");
-            redirectAttributes.addFlashAttribute("editBookModalOpen", true);
-            redirectAttributes.addFlashAttribute("editBookModalId", bookForm.getId());
-            return "redirect:/";
-        }
-
-        if (bookForm.getCategory() == null || bookForm.getCategory().isBlank()) {
-            redirectAttributes.addFlashAttribute("error", "Kategori tidak boleh kosong");
-            redirectAttributes.addFlashAttribute("editBookModalOpen", true);
-            redirectAttributes.addFlashAttribute("editBookModalId", bookForm.getId());
-            return "redirect:/";
-        }
-
-        if (bookForm.getStock() == null || bookForm.getStock() <= 0) {
-            redirectAttributes.addFlashAttribute("error", "Stok harus lebih dari 0");
-            redirectAttributes.addFlashAttribute("editBookModalOpen", true);
-            redirectAttributes.addFlashAttribute("editBookModalId", bookForm.getId());
-            return "redirect:/";
-        }
-
-        // Update buku
-        Book updated = bookService.updateBook(
-                authUser.getId(),
-                bookForm.getId(),
-                bookForm.getTitle().trim(),
-                bookForm.getAuthor().trim(),
-                bookForm.getIsbn().trim(),
-                bookForm.getCategory().trim(),
-                bookForm.getPublisher() != null ? bookForm.getPublisher().trim() : null,
-                bookForm.getPublicationYear(),
-                bookForm.getStock());
-
-        if (updated == null) {
-            redirectAttributes.addFlashAttribute("error", "Gagal memperbarui buku. ISBN mungkin sudah digunakan.");
-            redirectAttributes.addFlashAttribute("editBookModalOpen", true);
-            redirectAttributes.addFlashAttribute("editBookModalId", bookForm.getId());
-            return "redirect:/";
-        }
-
-        redirectAttributes.addFlashAttribute("success", "Buku berhasil diperbarui!");
-        return "redirect:/";
-    }
+    
 
     @PostMapping("/delete")
     public String postDeleteBook(@Valid @ModelAttribute("bookForm") BookForm bookForm,
