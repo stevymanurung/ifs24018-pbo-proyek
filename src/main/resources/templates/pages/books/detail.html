@@ -1,385 +1,149 @@
 <!DOCTYPE html>
-<html lang="id" xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org" 
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layouts/base}">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!-- JUDUL Halaman - Mengambil judul buku dari controller -->
-    <title th:text="${'Detail Buku - ' + book.title}">Detail Buku</title>
-    
-    <!-- CSS Bootstrap & Icons -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
-    
-    <!-- CSS Kustom -->
-    <style>
-        body {
-            background-color: #f8f9fa;
-        }
-        .book-cover-large {
-            max-height: 400px;
-            object-fit: cover;
-            border-radius: 10px;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-        }
-        .info-card {
-            border-left: 4px solid #0d6efd;
-        }
-        .borrowing-history-card {
-            transition: all 0.2s;
-        }
-        .borrowing-history-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-        }
-        /* Style untuk placeholder cover yang tidak ada */
-        .cover-placeholder {
-            height: 400px; 
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        }
-    </style>
+    <title th:text="${book.title} + ' - Detail'">Book Detail</title>
 </head>
 <body>
-    <!-- NAVBAR - Navigasi utama aplikasi -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
-        <div class="container-fluid">
-            <!-- Logo/Brand -->
-            <a class="navbar-brand" href="/">
-                <i class="bi bi-book-half me-2"></i>
-                Perpustakaan Digital
-            </a>
+    <main layout:fragment="content">
+        <div class="container mt-4">
             
-            <!-- Tombol Toggle untuk mobile -->
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            
-            <!-- Menu Navigasi -->
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto">
-                    <li class="nav-item">
-                        <a class="nav-link" href="/">
-                            <i class="bi bi-house-door me-1"></i> Dashboard
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="/borrowings">
-                            <i class="bi bi-journal-bookmark me-1"></i> Peminjaman
-                        </a>
-                    </li>
-                    <!-- Dropdown User -->
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
-                            <i class="bi bi-person-circle me-1"></i>
-                            <!-- Menampilkan nama user dari authentication -->
-                            <span th:text="${auth.name}">User</span>
-                        </a>
-                        <ul class="dropdown-menu dropdown-menu-end">
-                            <li>
-                                <a class="dropdown-item" href="/auth/logout">
-                                    <i class="bi bi-box-arrow-right me-2"></i> Logout
-                                </a>
-                            </li>
-                        </ul>
-                    </li>
-                </ul>
-            </div>
-        </div>
-    </nav>
-
-    <!-- KONTEN UTAMA -->
-    <div class="container mt-4">
-        
-        <!-- BREADCRUMB - Navigasi hierarki -->
-        <nav aria-label="breadcrumb">
-            <ol class="breadcrumb">
-                <li class="breadcrumb-item"><a href="/">Dashboard</a></li>
-                <li class="breadcrumb-item active" aria-current="page">Detail Buku</li>
-            </ol>
-        </nav>
-
-        <!-- DETAIL BUKU -->
-        <div class="row">
-            <!-- KOLOM KIRI: Gambar Cover -->
-            <div class="col-md-4 mb-4">
-                <div class="card">
-                    <div class="card-body text-center">
-                        <!-- Menampilkan cover jika ada -->
-                        <img th:if="${book.cover != null}" 
-                             th:src="@{'/books/cover/' + ${book.cover}}" 
-                             class="img-fluid book-cover-large mb-3" 
-                             th:alt="${book.title}">
-                        
-                        <!-- Placeholder jika cover tidak ada -->
-                        <div th:if="${book.cover == null}" 
-                             class="cover-placeholder d-flex align-items-center justify-content-center text-white mb-3 rounded">
-                            <i class="bi bi-book display-1"></i>
-                        </div>
-                        
-                        <!-- Tombol Upload Cover -->
-                        <button class="btn btn-outline-primary w-100" 
-                                data-bs-toggle="modal" 
-                                data-bs-target="#editCoverBookModal">
-                            <i class="bi bi-image me-1"></i> Upload Cover
-                        </button>
-                    </div>
-                </div>
+            <!-- Tombol Kembali -->
+            <div class="mb-4">
+                <a th:href="@{/}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left me-2"></i>Back to Collection
+                </a>
             </div>
 
-            <!-- KOLOM KANAN: Informasi Buku -->
-            <div class="col-md-8">
-                <!-- KARTU INFORMASI BUKU -->
-                <div class="card info-card mb-4">
-                    <div class="card-header bg-white">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <!-- Judul Buku -->
-                            <h4 class="mb-0" th:text="${book.title}">Judul Buku</h4>
-                            
-                            <!-- TOMBOL AKSI -->
-                            <div>
-                                <!-- Tombol Kembali -->
-                                <a href="/" class="btn btn-sm btn-secondary me-2">
-                                    <i class="bi bi-arrow-left me-1"></i> Kembali
-                                </a>
+            <div class="card shadow-sm">
+                <div class="card-body p-4">
+                    <div class="row">
+                        <!-- BAGIAN KIRI: COVER BUKU -->
+                        <div class="col-md-4 text-center mb-4 mb-md-0">
+                            <div class="book-cover-container rounded shadow-sm overflow-hidden position-relative">
+                                <!-- Jika ada cover -->
+                                <img th:if="${book.cover != null}" 
+                                     th:src="@{'/uploads/' + ${book.cover}}" 
+                                     class="img-fluid" 
+                                     alt="Book Cover"
+                                     style="max-height: 500px; width: 100%; object-fit: cover;">
                                 
-                                <!-- PERBAIKAN: Tombol Edit - menggunakan data attribute -->
-                                <button class="btn btn-sm btn-warning me-2 edit-book-btn" 
-                                        type="button"
-                                        th:data-book-id="${book.id}">
-                                    <i class="bi bi-pencil me-1"></i> Edit
-                                </button>
+                                <!-- Jika TIDAK ada cover (Gambar Default) -->
+                                <div th:if="${book.cover == null}" 
+                                     class="bg-light d-flex align-items-center justify-content-center"
+                                     style="height: 400px; background-color: #e9ecef;">
+                                    <div class="text-center text-muted">
+                                        <i class="bi bi-book display-1"></i>
+                                        <p class="mt-2">No Cover Available</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- BAGIAN KANAN: INFORMASI BUKU -->
+                        <div class="col-md-8">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <span class="badge bg-primary mb-2" th:text="${book.category}">Category</span>
+                                    <h2 class="fw-bold mb-1" th:text="${book.title}">Judul Buku</h2>
+                                    <h5 class="text-muted" th:text="${book.author}">Penulis</h5>
+                                </div>
                                 
-                                <!-- PERBAIKAN: Tombol Hapus - menggunakan data attribute -->
-                                <button class="btn btn-sm btn-danger delete-book-btn" 
-                                        type="button"
-                                        th:data-book-id="${book.id}">
-                                    <i class="bi bi-trash me-1"></i> Hapus
+                                <!-- Status Stok -->
+                                <div class="text-end">
+                                    <h3 class="fw-bold mb-0" 
+                                        th:classappend="${book.stock > 0 ? 'text-success' : 'text-danger'}"
+                                        th:text="${book.stock > 0 ? 'Available' : 'Out of Stock'}">
+                                        Status
+                                    </h3>
+                                    <small class="text-muted">
+                                        <span th:text="${book.stock}">0</span> items left
+                                    </small>
+                                </div>
+                            </div>
+
+                            <hr class="my-4">
+
+                            <!-- Detail Grid -->
+                            <div class="row g-3">
+                                <div class="col-sm-6">
+                                    <label class="text-muted small text-uppercase fw-bold">ISBN</label>
+                                    <p class="fs-5 font-monospace" th:text="${book.isbn}">-</p>
+                                </div>
+                                <div class="col-sm-6">
+                                    <label class="text-muted small text-uppercase fw-bold">Publisher</label>
+                                    <p class="fs-5" th:text="${book.publisher ?: '-'}">-</p>
+                                </div>
+                                <div class="col-sm-6">
+                                    <label class="text-muted small text-uppercase fw-bold">Publication Year</label>
+                                    <p class="fs-5" th:text="${book.publicationYear ?: '-'}">-</p>
+                                </div>
+                                <div class="col-sm-6">
+                                    <label class="text-muted small text-uppercase fw-bold">Added Date</label>
+                                    <!-- Contoh format tanggal, sesuaikan jika ada field createdAt -->
+                                    <p class="fs-5">-</p> 
+                                </div>
+                            </div>
+
+                            <hr class="my-4">
+
+                            <!-- Action Buttons -->
+                            <div class="d-flex gap-2">
+                                <!-- Tombol Edit (Memicu Modal di Home - Perlu penyesuaian jika detail page terpisah) -->
+                                <!-- Karena ini halaman terpisah, kita pakai Modal Edit versi halaman ini atau redirect ke Home dengan parameter -->
+                                <button type="button" class="btn btn-warning px-4" 
+                                        data-bs-toggle="modal" data-bs-target="#editBookModal">
+                                    <i class="bi bi-pencil me-2"></i>Edit Book
+                                </button>
+
+                                <button type="button" class="btn btn-danger px-4" 
+                                        data-bs-toggle="modal" data-bs-target="#deleteBookModal">
+                                    <i class="bi bi-trash me-2"></i>Delete
                                 </button>
                             </div>
-                        </div>
-                    </div>
-                    
-                    <!-- BODY: Detail Informasi Buku -->
-                    <div class="card-body">
-                        <!-- BARIS 1: Penulis & Kategori -->
-                        <div class="row mb-3">
-                            <div class="col-md-6">
-                                <p class="mb-2">
-                                    <strong><i class="bi bi-person me-2"></i>Penulis:</strong><br>
-                                    <span th:text="${book.author}">-</span>
-                                </p>
-                            </div>
-                            <div class="col-md-6">
-                                <p class="mb-2">
-                                    <strong><i class="bi bi-tag me-2"></i>Kategori:</strong><br>
-                                    <span class="badge bg-secondary" th:text="${book.category}">-</span>
-                                </p>
-                            </div>
-                        </div>
-
-                        <!-- BARIS 2: ISBN & Penerbit -->
-                        <div class="row mb-3">
-                            <div class="col-md-6">
-                                <p class="mb-2">
-                                    <strong><i class="bi bi-upc me-2"></i>ISBN:</strong><br>
-                                    <span th:text="${book.isbn}">-</span>
-                                </p>
-                            </div>
-                            <div class="col-md-6">
-                                <p class="mb-2">
-                                    <strong><i class="bi bi-building me-2"></i>Penerbit:</strong><br>
-                                    <!-- Ternary operator untuk handle null -->
-                                    <span th:text="${book.publisher != null ? book.publisher : '-'}">-</span>
-                                </p>
-                            </div>
-                        </div>
-
-                        <!-- BARIS 3: Tahun Terbit & Stok -->
-                        <div class="row mb-3">
-                            <div class="col-md-6">
-                                <p class="mb-2">
-                                    <strong><i class="bi bi-calendar me-2"></i>Tahun Terbit:</strong><br>
-                                    <span th:text="${book.publicationYear != null ? book.publicationYear : '-'}">-</span>
-                                </p>
-                            </div>
-                            <div class="col-md-6">
-                                <p class="mb-2">
-                                    <strong><i class="bi bi-boxes me-2"></i>Stok:</strong><br>
-                                    <!-- Menampilkan stok tersedia / total -->
-                                    <span class="badge bg-info fs-6">
-                                        <span th:text="${book.availableStock}">0</span> / 
-                                        <span th:text="${book.stock}">0</span> tersedia
-                                    </span>
-                                </p>
-                            </div>
-                        </div>
-
-                        <hr>
-
-                        <!-- TIMESTAMP: Created & Updated -->
-                        <div class="row">
-                            <div class="col-md-6">
-                                <p class="mb-2 text-muted">
-                                    <small>
-                                        <i class="bi bi-clock-history me-2"></i>
-                                        Dibuat: 
-                                        <!-- Format tanggal dengan Thymeleaf temporals -->
-                                        <span th:text="${#temporals.format(book.createdAt, 'dd MMM yyyy HH:mm')}">-</span>
-                                    </small>
-                                </p>
-                            </div>
-                            <div class="col-md-6">
-                                <p class="mb-2 text-muted">
-                                    <small>
-                                        <i class="bi bi-pencil-square me-2"></i>
-                                        Diperbarui: 
-                                        <span th:text="${#temporals.format(book.updatedAt, 'dd MMM yyyy HH:mm')}">-</span>
-                                    </small>
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- RIWAYAT PEMINJAMAN -->
-                <div class="card">
-                    <div class="card-header bg-white">
-                        <h5 class="mb-0">
-                            <i class="bi bi-clock-history me-2"></i>
-                            Riwayat Peminjaman
-                        </h5>
-                    </div>
-                    <div class="card-body">
-                        <!-- Kondisi jika ada riwayat peminjaman -->
-                        <div th:if="${borrowings != null and !borrowings.isEmpty()}">
-                            <div class="table-responsive">
-                                <table class="table table-hover">
-                                    <thead>
-                                        <tr>
-                                            <th>Peminjam</th>
-                                            <th>Tanggal Pinjam</th>
-                                            <th>Jatuh Tempo</th>
-                                            <th>Status</th>
-                                            <th>Aksi</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <!-- Loop melalui list peminjaman -->
-                                        <tr th:each="borrowing : ${borrowings}" 
-                                            class="borrowing-history-card">
-                                            <td>
-                                                <strong th:text="${borrowing.borrowerName}">-</strong><br>
-                                                <small class="text-muted" 
-                                                       th:text="${borrowing.borrowerEmail}">-</small>
-                                            </td>
-                                            <td th:text="${#temporals.format(borrowing.borrowDate, 'dd MMM yyyy')}">-</td>
-                                            <td th:text="${#temporals.format(borrowing.dueDate, 'dd MMM yyyy')}">-</td>
-                                            <td>
-                                                <!-- Badge status dengan warna berbeda -->
-                                                <span class="badge" 
-                                                      th:classappend="${borrowing.status == 'BORROWED' ? 'bg-warning' : 
-                                                                      (borrowing.status == 'RETURNED' ? 'bg-success' : 'bg-danger')}"
-                                                      th:text="${borrowing.status == 'BORROWED' ? 'Dipinjam' : 
-                                                              (borrowing.status == 'RETURNED' ? 'Dikembalikan' : 'Terlambat')}">
-                                                </span>
-                                            </td>
-                                            <td>
-                                                <!-- Link ke detail peminjaman -->
-                                                <a th:href="@{'/borrowings/' + ${borrowing.id}}" 
-                                                   class="btn btn-sm btn-outline-primary">
-                                                    <i class="bi bi-eye"></i> Detail
-                                                </a>
-                                            </td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                        
-                        <!-- Kondisi jika tidak ada riwayat peminjaman -->
-                        <div th:if="${borrowings == null or borrowings.isEmpty()}" 
-                             class="text-center py-4">
-                            <i class="bi bi-inbox display-4 text-muted"></i>
-                            <p class="text-muted mt-3">Belum ada riwayat peminjaman untuk buku ini</p>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
 
-    <!-- MODAL untuk Upload Cover (diinclude dari file lain) -->
-    <div th:replace="~{models/books/edit-cover :: editCoverModal}"></div>
+        <!-- INCLUDE MODAL EDIT DAN DELETE (Agar tombol di atas berfungsi) -->
+        <!-- Pastikan path th:replace sesuai dengan lokasi file edit.html dan delete.html kamu -->
+        <div th:replace="~{models/books/edit :: editBookModal}"></div>
+        <div th:replace="~{models/books/delete :: deleteBookModal}"></div>
 
-    <!-- SCRIPT -->
-    <!-- Bootstrap Bundle dengan Popper -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    
-    <!-- JAVASCRIPT KUSTOM -->
-    <script>
-        /**
-         * FUNGSI: editBook
-         * DESC: Mengarahkan user ke halaman dengan parameter untuk membuka modal edit
-         * @param {string} id - ID buku yang akan diedit
-         */
-        function editBook(id) {
-            window.location.href = '/?editBookModalOpen=true&editBookModalId=' + id;
-        }
+        <!-- SCRIPT KHUSUS HALAMAN DETAIL UNTUK ISI DATA KE MODAL -->
+        <script th:inline="javascript">
+            document.addEventListener('DOMContentLoaded', function() {
+                // Pre-fill Edit Modal with Current Book Data
+                const editModalBtn = document.querySelector('[data-bs-target="#editBookModal"]');
+                if(editModalBtn) {
+                    editModalBtn.addEventListener('click', function() {
+                        const book = /*[[${book}]]*/ {}; // Ambil object book dari Thymeleaf
+                        
+                        document.getElementById('editBookId').value = book.id;
+                        document.getElementById('editTitle').value = book.title;
+                        document.getElementById('editAuthor').value = book.author;
+                        // document.getElementById('editIsbn').value = book.isbn; // Uncomment jika ada input ISBN
+                        document.getElementById('editCategory').value = book.category;
+                        document.getElementById('editStock').value = book.stock;
+                        document.getElementById('editPublisher').value = book.publisher;
+                        document.getElementById('editPublicationYear').value = book.publicationYear;
+                    });
+                }
 
-        /**
-         * FUNGSI: deleteBook
-         * DESC: Mengarahkan user ke halaman dengan parameter untuk membuka modal delete
-         * @param {string} id - ID buku yang akan dihapus
-         */
-        function deleteBook(id) {
-            window.location.href = '/?deleteBookModalOpen=true&deleteBookModalId=' + id;
-        }
-
-        /**
-         * INISIALISASI EVENT LISTENER saat DOM siap
-         * DESC: Menangani klik pada tombol Edit dan Delete
-         */
-        document.addEventListener('DOMContentLoaded', function() {
-            
-            // Event Listener untuk tombol EDIT
-            document.querySelectorAll('.edit-book-btn').forEach(button => {
-                button.addEventListener('click', function() {
-                    // Ambil ID dari data attribute
-                    const bookId = this.getAttribute('data-book-id');
-                    console.log('Edit book with ID:', bookId);
-                    
-                    // Panggil fungsi edit
-                    editBook(bookId);
-                });
+                // Pre-fill Delete Modal
+                const deleteModalBtn = document.querySelector('[data-bs-target="#deleteBookModal"]');
+                if(deleteModalBtn) {
+                    deleteModalBtn.addEventListener('click', function() {
+                        const book = /*[[${book}]]*/ {}; 
+                        document.getElementById('deleteBookId').value = book.id;
+                        document.getElementById('deleteBookTitleDisplay').textContent = book.title;
+                    });
+                }
             });
-            
-            // Event Listener untuk tombol DELETE
-            document.querySelectorAll('.delete-book-btn').forEach(button => {
-                button.addEventListener('click', function() {
-                    // Ambil ID dari data attribute
-                    const bookId = this.getAttribute('data-book-id');
-                    console.log('Delete book with ID:', bookId);
-                    
-                    // Konfirmasi sebelum hapus
-                    if (confirm('Apakah Anda yakin ingin menghapus buku ini?')) {
-                        deleteBook(bookId);
-                    }
-                });
-            });
-            
-            // DEBUG: Log untuk memastikan data terload
-            console.log('Book ID from Thymeleaf:', 
-                document.querySelector('.edit-book-btn')?.getAttribute('data-book-id'));
-        });
-        
-        /**
-         * FUNGSI: handleError (Opsional)
-         * DESC: Menangani error dari Thymeleaf atau server
-         * @param {string} message - Pesan error
-         */
-        function handleError(message) {
-            console.error('Error:', message);
-            alert('Terjadi kesalahan: ' + message);
-        }
-    </script>
+        </script>
+    </main>
 </body>
 </html>

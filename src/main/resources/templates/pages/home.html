@@ -334,121 +334,46 @@
                 return btn;
             }
 
-            // ============================================================================
-            // OPEN EDIT MODAL
-            // ============================================================================
-            function openEditModal(button) {
-                console.log("✏️ Opening edit modal");
-                
-                try {
-                    const bookId = button.getAttribute('data-id');
-                    const title = button.getAttribute('data-title') || '';
-                    const author = button.getAttribute('data-author') || '';
-                    const category = button.getAttribute('data-category') || '';
-                    const publisher = button.getAttribute('data-publisher') || '';
-                    const year = button.getAttribute('data-year') || '';
-                    const stock = button.getAttribute('data-stock') || '';
-                    const cover = button.getAttribute('data-cover') || '';
-                    
-                    console.log('📖 Book data:', { bookId, title, author, category });
-                    
-                    // Populate form
-                    document.getElementById('editBookId').value = bookId;
-                    document.getElementById('editTitle').value = title;
-                    document.getElementById('editAuthor').value = author;
-                    document.getElementById('editCategory').value = category;
-                    document.getElementById('editPublisher').value = publisher;
-                    document.getElementById('editPublicationYear').value = year;
-                    document.getElementById('editStock').value = stock;
-                    
-                    // Show current cover
-                    const editCoverPreview = document.getElementById('editCoverPreview');
-                    const editNoCoverMessage = document.getElementById('editNoCoverMessage');
-                    if (cover && cover !== 'null') {
-                        editCoverPreview.src = '/api/books/cover/' + cover;
-                        editCoverPreview.style.display = 'block';
-                        editNoCoverMessage.style.display = 'none';
-                    } else {
-                        editCoverPreview.style.display = 'none';
-                        editNoCoverMessage.style.display = 'block';
-                    }
-                    
-                    // Set form action - INI YANG DIPERBAIKI!
-                    const form = document.getElementById('editBookForm');
-                    if (form) {
-                        form.action = '/books/edit/' + bookId;
-                        console.log('✅ Form action:', form.action);
-                    }
-
-                    // Show modal
-                    const modalEl = document.getElementById('editBookModal');
-                    if (modalEl) {
-                        const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
-                        modal.show();
-                    }
-                } catch (error) {
-                    console.error('❌ Error opening edit modal:', error);
-                    showToast('error', 'Failed to open edit modal: ' + error.message);
-                }
-            }
-                    
-            // ============================================================================
-            // OPEN DELETE MODAL
-            // ============================================================================
-            function openDeleteModal(button) {
-                console.log('🗑️ Opening delete modal');
-                
-                try {
-                    const bookId = button.getAttribute('data-id');
-                    const bookTitle = button.getAttribute('data-title');
-                    
-                    console.log('📖 Deleting:', bookId, bookTitle);
-                    
-                    // Set values
-                    document.getElementById('deleteBookId').value = bookId;
-                    document.getElementById('deleteBookTitleDisplay').textContent = bookTitle;
-                    
-                    const confirmInput = document.getElementById('deleteConfirmTitle');
-                    if (confirmInput) {
-                        confirmInput.placeholder = 'Type: ' + bookTitle;
-                        confirmInput.value = '';
-                        confirmInput.classList.remove('is-valid', 'is-invalid');
-
-                        confirmInput.addEventListener('input', function() {
-                            const deleteBtn = document.getElementById('confirmDeleteBtn');
-                            if (this.value === bookTitle) {
-                                this.classList.add('is-valid');
-                                this.classList.remove('is-invalid');
-                                if (deleteBtn) deleteBtn.disabled = false;
-                            } else {
-                                this.classList.add('is-invalid');
-                                this.classList.remove('is-valid');
-                                if (deleteBtn) deleteBtn.disabled = true;
-                            }
-                        });
-                    }
-
-                    if(!confirmInput){
-                        return;
-                    }
-                    
-                    // Disable delete button
-                    const deleteBtn = document.getElementById('confirmDeleteBtn');
-                    if (deleteBtn) {
-                        deleteBtn.disabled = true;
-                    }
-                    
-                    // Show modal
-                    const modalEl = document.getElementById('deleteBookModal');
-                    if (modalEl) {
-                        const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
-                        modal.show();
-                    }
-                } catch (error) {
-                    console.error('❌ Error opening delete modal:', error);
-                    showToast('error', 'Failed to open delete modal: ' + error.message);
-                }
-            }
+           // ============================================================================
+// OPEN EDIT MODAL (UPDATED)
+// ============================================================================
+function openEditModal(button) {
+    console.log("✏️ Opening edit modal");
+    
+    try {
+        const bookId = button.getAttribute('data-id');
+        const title = button.getAttribute('data-title') || '';
+        const author = button.getAttribute('data-author') || '';
+        const isbn = button.getAttribute('data-isbn') || ''; // Pastikan ISBN diambil
+        const category = button.getAttribute('data-category') || '';
+        const publisher = button.getAttribute('data-publisher') || '';
+        const year = button.getAttribute('data-year') || '';
+        const stock = button.getAttribute('data-stock') || '';
+        
+        // Populate form fields
+        document.getElementById('editBookId').value = bookId; // ID Masuk ke Hidden Input
+        document.getElementById('editTitle').value = title;
+        document.getElementById('editAuthor').value = author;
+        // Pastikan Anda punya input ID 'editIsbn' di HTML edit.html, jika tidak hapus baris ini
+        // document.getElementById('editIsbn').value = isbn; 
+        document.getElementById('editCategory').value = category;
+        document.getElementById('editPublisher').value = publisher;
+        document.getElementById('editPublicationYear').value = year;
+        document.getElementById('editStock').value = stock;
+        
+        // HAPUS BAGIAN "form.action = ..." YANG LAMA
+        // Kita gunakan action default yang ada di HTML edit.html (/books/update)
+        
+        // Show modal
+        const modalEl = document.getElementById('editBookModal');
+        if (modalEl) {
+            const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+            modal.show();
+        }
+    } catch (error) {
+        console.error('❌ Error opening edit modal:', error);
+    }
+}
 
             // ============================================================================
             // TOAST NOTIFICATION
