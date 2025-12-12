@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Detail Buku</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+
+    <div class="container d-flex align-items-center justify-content-center" style="min-height: 100vh;">
+        <div class="glass-card w-100" style="max-width: 900px;">
+            <div class="d-flex justify-content-between align-items-center mb-4 border-bottom border-light pb-3">
+                <h3 class="text-white mb-0">📖 Detail Buku</h3>
+                <a href="/books" class="btn btn-outline-light rounded-pill btn-sm">Kembali</a>
+            </div>
+
+            <div class="row">
+                <div class="col-md-5 text-center">
+                    <div th:if="${book.coverImage != null}">
+                        <img th:src="@{'/uploads/' + ${book.coverImage}}" 
+                             class="img-fluid rounded-4 shadow-lg border border-light" 
+                             style="max-height: 400px;">
+                    </div>
+                    <div th:unless="${book.coverImage != null}" class="p-5 bg-white bg-opacity-25 rounded-4 text-white">
+                        <i class="fas fa-image fa-4x"></i>
+                        <p class="mt-3">Tidak ada cover</p>
+                    </div>
+                </div>
+
+                <div class="col-md-7 text-white">
+                    <h2 th:text="${book.title}" class="fw-bold mb-3"></h2>
+                    <h5 class="text-white-50 mb-4" th:text="'Penulis: ' + ${book.author}"></h5>
+
+                    <div class="mb-3">
+                        <span class="badge bg-white text-primary fs-6 px-3 py-2 rounded-pill me-2">
+                            <i class="fas fa-tag me-1"></i> <span th:text="${book.category}"></span>
+                        </span>
+                        <span class="badge bg-success bg-opacity-75 fs-6 px-3 py-2 rounded-pill">
+                            <i class="fas fa-box me-1"></i> Stok: <span th:text="${book.stock}"></span>
+                        </span>
+                    </div>
+
+                    <p class="mt-4">
+                        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+                        (Ini contoh deskripsi statis).
+                    </p>
+
+                    <div class="mt-5">
+                        <a th:href="@{'/book/edit/' + ${book.id}}" class="btn btn-glass px-4 me-2">Edit Data</a>
+                        <a th:href="@{'/book/delete/' + ${book.id}}" class="btn btn-danger rounded-pill px-4" onclick="return confirm('Hapus?');">Hapus</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>
