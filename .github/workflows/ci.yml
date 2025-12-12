@@ -46,9 +46,7 @@ jobs:
 
       # Jalankan unit test + coverage
       - name: Run tests with coverage
-        run: |
-          chmod +x mvnw
-          ./mvnw clean test jacoco:check
+        run: mvn clean verify -B # Gunakan 'mvn' saja, hapus './mvnw'
 
       - name: Upload test report
         uses: actions/upload-artifact@v4
