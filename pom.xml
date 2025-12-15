@@ -18,7 +18,7 @@
     <description>Library Admin Project</description>
 
     <properties>
-        <java.version>17</java.version> <!-- Minimal Java 17 untuk Spring Boot 3 -->
+        <java.version>25</java.version> <!-- Minimal Java 17 untuk Spring Boot 3 -->
     </properties>
 
     <dependencies>
@@ -44,6 +44,13 @@
         <dependency>
             <groupId>com.h2database</groupId>
             <artifactId>h2</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+
+        <!-- Driver PostgreSQL untuk Neon DB -->
+        <dependency>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
             <scope>runtime</scope>
         </dependency>
 
