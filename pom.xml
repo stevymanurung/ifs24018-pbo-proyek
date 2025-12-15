@@ -18,7 +18,7 @@
     <description>Library Admin Project</description>
 
     <properties>
-        <java.version>25</java.version> <!-- Minimal Java 17 untuk Spring Boot 3 -->
+        <java.version>17</java.version> <!-- Minimal Java 17 untuk Spring Boot 3 -->
     </properties>
 
     <dependencies>
